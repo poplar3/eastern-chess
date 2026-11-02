@@ -1,1 +1,2107 @@
-[]
+[
+ {
+  "id": "sh-002ypg2",
+  "origin": "checks",
+  "fen": "9/1k7/9/9/9/6+r2/5nPB1/3+b1K3/5SN2[rp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "d2e1",
+   "f2g2",
+   "e1g3",
+   "g2h1",
+   "R@i1"
+  ]
+ },
+ {
+  "id": "sh-00rg87u",
+  "origin": "checks",
+  "fen": "3g1k1+B1/4l4/4pg3/2+R2R3/9/9/9/K8/9[RRB] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@g9",
+   "f9f8",
+   "f6f7"
+  ]
+ },
+ {
+  "id": "sh-01vaqps",
+  "origin": "checks",
+  "fen": "2g6/k2L5/9/gRpL5/9/9/9/9/6K2[GLL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@b7",
+   "a8b9",
+   "L@b8",
+   "c9b8",
+   "b7b8"
+  ]
+ },
+ {
+  "id": "sh-03p6016",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/S8/2r6/K8/9[bg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "c3c2+",
+   "a2a1",
+   "B@c3"
+  ]
+ },
+ {
+  "id": "sh-03sqk1o",
+  "origin": "checks",
+  "fen": "8k/6bl1/7R1/9/9/9/9/9/3K5[GSL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@i8",
+   "i9i8",
+   "G@i7",
+   "i8i9",
+   "i7h8"
+  ]
+ },
+ {
+  "id": "sh-04hm6pd",
+  "origin": "checks",
+  "fen": "6pgk/6+B2/7s1/9/9/9/9/3K5/9[GNL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "L@i7",
+   "h7i8",
+   "N@h7"
+  ]
+ },
+ {
+  "id": "sh-04nod92",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/9/6lg1/7lG/7PK[sp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "h2h1+",
+   "i1h1",
+   "g3g2+",
+   "h1i1",
+   "S@h2",
+   "i2h2",
+   "g2h2"
+  ]
+ },
+ {
+  "id": "sh-04vg0nw",
+  "origin": "checks",
+  "fen": "9/6k2/9/9/1+r7/1P7/4g4/1KLr5/2PG5[bl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "b5b4",
+   "b2a1",
+   "L@a3"
+  ]
+ },
+ {
+  "id": "sh-04wzl3m",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/9/9/6N1r/9/6PK1[sp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i3h3+",
+   "h1i1",
+   "S@h2"
+  ]
+ },
+ {
+  "id": "sh-05tdhyj",
+  "origin": "checks",
+  "fen": "6k2/9/9/9/1r7/1n7/1P7/1K7/SB2b4[np] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "N@c4",
+   "b2c1",
+   "e1d2+"
+  ]
+ },
+ {
+  "id": "sh-05ypesi",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/5l3/9/7nG/4P1K2/8b[rbn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "B@f1",
+   "g2h1",
+   "R@h2"
+  ]
+ },
+ {
+  "id": "sh-06bnpx4",
+  "origin": "checks",
+  "fen": "9/8k/9/9/5+b+r2/9/2P1Pn3/2GK5/9[bgn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g5g2",
+   "d2c1",
+   "g2c2"
+  ]
+ },
+ {
+  "id": "sh-06ipbgu",
+  "origin": "checks",
+  "fen": "9/8k/9/9/9/r8/1PP6/3P+p4/2KG5[bss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "a4a1+",
+   "c1c2",
+   "B@b1",
+   "c2c1",
+   "b1d3"
+  ]
+ },
+ {
+  "id": "sh-06w2wi0",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/+p8/G8/1S1r5/G1K6/g8[glp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@c3",
+   "c2c1",
+   "d3d2+"
+  ]
+ },
+ {
+  "id": "sh-07398kk",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/2+b6/5S3/9/4K4/6N2[rgn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@f2",
+   "e2d1",
+   "G@d2"
+  ]
+ },
+ {
+  "id": "sh-07o1ejd",
+  "origin": "checks",
+  "fen": "2sskp3/4s4/4+P1S2/1+R7/9/9/9/9/1K7[G] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@f8",
+   "f9f8",
+   "g7f8"
+  ]
+ },
+ {
+  "id": "sh-080zman",
+  "origin": "checks",
+  "fen": "k8/9/9/9/9/4g4/4n1PS1/4+p4/4NPK2[bgp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "B@i3",
+   "g1h1",
+   "G@h2"
+  ]
+ },
+ {
+  "id": "sh-09e12wj",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/9/4+r4/2l6/1K1g5/3S5[lp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "e4b4",
+   "b2a1",
+   "L@a3"
+  ]
+ },
+ {
+  "id": "sh-09e7yro",
+  "origin": "checks",
+  "fen": "7k1/9/9/9/9/9/1NgP5/SS7/1K7[gs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@c2",
+   "b1a1",
+   "c2b2"
+  ]
+ },
+ {
+  "id": "sh-09gmc62",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/8+r/4+p2GL/9/7K1[sn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i4h3",
+   "h1g1",
+   "S@f2"
+  ]
+ },
+ {
+  "id": "sh-09irkdg",
+  "origin": "checks",
+  "fen": "6gSk/6G1s/8p/5G3/9/9/9/4K4/9[RGS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "S@h8",
+   "g9h8",
+   "g8h8",
+   "i9h8",
+   "G@g7",
+   "h8i9",
+   "G@h8"
+  ]
+ },
+ {
+  "id": "sh-09k9p2l",
+  "origin": "checks",
+  "fen": "2k1S4/+B1s6/1ssb5/2N6/9/9/9/9/8K[SS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@d8",
+   "c7d8",
+   "e9d8"
+  ]
+ },
+ {
+  "id": "sh-09lsq7f",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/2+bb5/2S6/9/K8/1G7[ggn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@a3",
+   "a2a1",
+   "c5d4",
+   "b1b2",
+   "a3b2"
+  ]
+ },
+ {
+  "id": "sh-0aw8vl6",
+  "origin": "checks",
+  "fen": "8k/9/9/9/9/S2+p5/9/K8/1Bb+r5[ggp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@a3",
+   "a2a1",
+   "c1b2"
+  ]
+ },
+ {
+  "id": "sh-0b3lmng",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/9/+b8/Bnr6/1PP6/PK7[pp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "b3c1+",
+   "b1c1",
+   "a4c2"
+  ]
+ },
+ {
+  "id": "sh-0bgfqcr",
+  "origin": "checks",
+  "fen": "5Rpk1/7b1/4B1+Rg1/9/9/9/9/9/K8[BGS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e7g9+",
+   "h8g9",
+   "g7g9",
+   "h9i8",
+   "g9i9"
+  ]
+ },
+ {
+  "id": "sh-0blzy1k",
+  "origin": "checks",
+  "fen": "1R7/p1k6/2p6/P1g6/9/9/9/9/8K[RS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@e8",
+   "c8b9",
+   "S@b8"
+  ]
+ },
+ {
+  "id": "sh-0boc116",
+  "origin": "checks",
+  "fen": "6k2/9/9/9/9/2P6/1PGg5/PK1s5/3r5[l] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "d2c3",
+   "b2a3",
+   "L@a5"
+  ]
+ },
+ {
+  "id": "sh-0bto40z",
+  "origin": "checks",
+  "fen": "b8/k8/2+B6/3+P5/9/9/9/6K2/9[G] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@b7",
+   "a8b9",
+   "c7c8"
+  ]
+ },
+ {
+  "id": "sh-0cdb1lv",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/9/1s1G5/9/1K7/2P6[ssp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@b3",
+   "b2a1",
+   "S@a2"
+  ]
+ },
+ {
+  "id": "sh-0ce1b9b",
+  "origin": "checks",
+  "fen": "5k3/6s2/2Ng1l3/3B3P1/9/9/9/9/2K6[SS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@f8",
+   "f9e8",
+   "S@e7",
+   "d7e7",
+   "d6e7+"
+  ]
+ },
+ {
+  "id": "sh-0ch5fhc",
+  "origin": "checks",
+  "fen": "5bk2/6p1g/3L2B2/9/9/9/9/2K6/9[BSN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "B@i7",
+   "g9h9",
+   "S@h8",
+   "i8h8",
+   "g7h8+"
+  ]
+ },
+ {
+  "id": "sh-0ct1cs5",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/9/9/5Pr1P/9/6SK1[bss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "g3h3+",
+   "g1h2",
+   "S@g2",
+   "h1i1",
+   "S@i2"
+  ]
+ },
+ {
+  "id": "sh-0cuhqer",
+  "origin": "checks",
+  "fen": "2k6/9/s1g6/4R4/9/9/9/9/6K2[RRG] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@a9",
+   "c9b8",
+   "R@b9",
+   "b8c8",
+   "e6e8+"
+  ]
+ },
+ {
+  "id": "sh-0d0x8k6",
+  "origin": "checks",
+  "fen": "3pkgn2/2p6/9/5+B1L1/9/9/9/9/1K7[GN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "N@d7",
+   "e9f8",
+   "G@e7",
+   "f8g8",
+   "h6h8+"
+  ]
+ },
+ {
+  "id": "sh-0epg0uz",
+  "origin": "checks",
+  "fen": "9/8k/9/9/3+b1+r3/3P+b4/9/3K5/2B6[gnl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "f5f2",
+   "d2d1",
+   "G@c2"
+  ]
+ },
+ {
+  "id": "sh-0es335d",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/6ln1/6nNN/9/8K[p] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "P@i2",
+   "i1h2",
+   "g3h1+",
+   "h2h1",
+   "g4g2+"
+  ]
+ },
+ {
+  "id": "sh-0exsgw6",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/5p3/7b1/8b/8K/7B1[rn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@h2",
+   "i2i1",
+   "N@h3"
+  ]
+ },
+ {
+  "id": "sh-0f3mhs1",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/+b8/1Pp6/9/KL7/1G7[rp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "R@a4",
+   "a2b3",
+   "a5b4",
+   "b3c2",
+   "c4c3+",
+   "c2c1",
+   "c3d2"
+  ]
+ },
+ {
+  "id": "sh-0faq91e",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/5b3/8b/5P3/7KP/6PL1[rbl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i4h3+",
+   "h2i1",
+   "h3i2"
+  ]
+ },
+ {
+  "id": "sh-0fmthlc",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/6p2/9/7K1/5L3[rgs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@g3",
+   "h2h3",
+   "R@h4",
+   "h3i3",
+   "G@h3"
+  ]
+ },
+ {
+  "id": "sh-0fvfx1h",
+  "origin": "checks",
+  "fen": "2k2B3/1P2b4/3B5/9/9/9/9/8K/9[LL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "b8b9+",
+   "c9d8",
+   "f9e8+",
+   "d8c7",
+   "d7c6+",
+   "c7c8",
+   "B@f5"
+  ]
+ },
+ {
+  "id": "sh-0gwrn6k",
+  "origin": "checks",
+  "fen": "8k/9/9/9/9/9/1G1B5/N8/NKsr5[rb] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@b2",
+   "b3b2",
+   "c1d2+",
+   "R@c1",
+   "d1c1"
+  ]
+ },
+ {
+  "id": "sh-0is3hfs",
+  "origin": "checks",
+  "fen": "7kg/7B1/5pPg1/5N3/9/9/9/9/4K4[BG] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 5,
+  "line": [
+   "g7g8+",
+   "h9i8",
+   "G@i7",
+   "h7i7",
+   "h8i9+",
+   "i8h7",
+   "i9g7",
+   "h7i8",
+   "g8h8"
+  ]
+ },
+ {
+  "id": "sh-0kavg8o",
+  "origin": "checks",
+  "fen": "9/5Lp1k/5NRpp/8b/9/9/9/9/5K3[L] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g7g8+",
+   "i8i9",
+   "L@i8"
+  ]
+ },
+ {
+  "id": "sh-0kijvf4",
+  "origin": "checks",
+  "fen": "9/4k4/9/9/9/9/S+pp6/S2p5/1K7[ssn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "c3c2+",
+   "b1a1",
+   "S@b2",
+   "a3b2",
+   "c2b2"
+  ]
+ },
+ {
+  "id": "sh-0kkp02j",
+  "origin": "checks",
+  "fen": "9/k8/9/9/9/6G+p1/2r6/4K1S2/2+b6[p] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "c1e3",
+   "e2d1",
+   "c3c1"
+  ]
+ },
+ {
+  "id": "sh-0kkpnv7",
+  "origin": "checks",
+  "fen": "1k7/s8/2l1+P4/4R4/9/9/9/7K1/9[GS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e6b6",
+   "a8b7",
+   "b6b7+",
+   "b9c9",
+   "S@c8"
+  ]
+ },
+ {
+  "id": "sh-0lqsofj",
+  "origin": "checks",
+  "fen": "n8/k8/1s1R5/1GB6/9/9/9/9/5K3[S] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@a7",
+   "a8b9",
+   "d7d9+"
+  ]
+ },
+ {
+  "id": "sh-0mfef93",
+  "origin": "checks",
+  "fen": "1k7/2P6/2s6/1N2N4/9/9/9/4K4/9[SL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "L@b7",
+   "c7b8",
+   "S@a8"
+  ]
+ },
+ {
+  "id": "sh-0mm6pku",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/7b1/7N1/6K1G/7L1[gss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@g3",
+   "g2f1",
+   "g3f2"
+  ]
+ },
+ {
+  "id": "sh-0mulmmb",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/9/9/1NP6/3p5/K1G6[rr] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "R@a3",
+   "a1b2",
+   "R@a2",
+   "b2b1",
+   "a3b3+",
+   "c1b2",
+   "b3b2"
+  ]
+ },
+ {
+  "id": "sh-0n9np9o",
+  "origin": "checks",
+  "fen": "9/6k2/9/9/9/Gg7/N8/K8/2P6[ss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@b3",
+   "a2a1",
+   "S@a2"
+  ]
+ },
+ {
+  "id": "sh-0nqkl24",
+  "origin": "checks",
+  "fen": "kg7/2p6/sb7/+R8/9/9/9/9/8K[GN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "a6a7",
+   "b7a8",
+   "N@b7"
+  ]
+ },
+ {
+  "id": "sh-0nqnaj0",
+  "origin": "checks",
+  "fen": "1k7/1g7/1p1+R5/1R7/9/9/9/9/7K1[RGP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "d7d9",
+   "b9a8",
+   "R@a9"
+  ]
+ },
+ {
+  "id": "sh-0nx8aj4",
+  "origin": "checks",
+  "fen": "g8/1k7/2R6/9/9/9/9/9/7K1[GS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@b7",
+   "b8b9",
+   "c7c8+"
+  ]
+ },
+ {
+  "id": "sh-0p07125",
+  "origin": "checks",
+  "fen": "7k1/8s/5s2+P/4N4/9/9/9/9/3K5[BSP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@h8",
+   "h9g8",
+   "B@i6",
+   "i8h7",
+   "i6h7"
+  ]
+ },
+ {
+  "id": "sh-0pr3mtr",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/8r/5S1+bP/5B2l/6GK1[s] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i2i1+",
+   "h1i1",
+   "S@i2"
+  ]
+ },
+ {
+  "id": "sh-0q3wyye",
+  "origin": "checks",
+  "fen": "k8/9/9/9/9/7P1/8r/6K2/9[gs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@f3",
+   "g2h2",
+   "G@h3",
+   "h2g1",
+   "i3i1"
+  ]
+ },
+ {
+  "id": "sh-0qrzs60",
+  "origin": "checks",
+  "fen": "8k/9/9/9/9/1P1N5/GN2+b4/1K7/3s5[bg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "e3d4",
+   "b2a2",
+   "G@b2"
+  ]
+ },
+ {
+  "id": "sh-0r5qmgr",
+  "origin": "checks",
+  "fen": "3Rs1k2/7p1/3S5/7G1/9/9/9/K8/9[B] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "d9e9+",
+   "g9g8",
+   "B@b3"
+  ]
+ },
+ {
+  "id": "sh-0soh0xs",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/4+r2+b1/9/5P3/7K1/7N1[rnp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e5e2",
+   "h2g3",
+   "R@g4",
+   "g3h3",
+   "h5h4"
+  ]
+ },
+ {
+  "id": "sh-0u0n5c0",
+  "origin": "checks",
+  "fen": "8p/4L2kg/9/9/6+R2/9/9/4K4/9[G] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@g7",
+   "h8h9",
+   "g7g8"
+  ]
+ },
+ {
+  "id": "sh-0ueaaa6",
+  "origin": "checks",
+  "fen": "3k5/9/9/9/7n1/5N2B/5s3/5+b1KL/9[l] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "L@h4",
+   "i4h3",
+   "f3g2+",
+   "h2i1",
+   "f2g3"
+  ]
+ },
+ {
+  "id": "sh-0vqkil6",
+  "origin": "checks",
+  "fen": "6pk1/5n3/7pp/8N/9/9/9/2K6/9[RL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@h8",
+   "h9i9",
+   "L@i8"
+  ]
+ },
+ {
+  "id": "sh-0wrk9dq",
+  "origin": "checks",
+  "fen": "1k7/9/9/9/6p2/7Ls/6+r2/7SK/6PS1[g] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@i3",
+   "i2i1",
+   "g3h2",
+   "h1h2",
+   "S@i2"
+  ]
+ },
+ {
+  "id": "sh-0wyrptk",
+  "origin": "checks",
+  "fen": "5k3/9/9/9/9/9/2+b6/2PB5/PK7[snp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@b2",
+   "b1a2",
+   "N@b4"
+  ]
+ },
+ {
+  "id": "sh-0x28uh3",
+  "origin": "checks",
+  "fen": "1g1p5/1k7/N3+R4/+B8/9/9/9/4K4/9[P] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e7b7",
+   "b8c9",
+   "b7c7",
+   "b9c8",
+   "c7c8"
+  ]
+ },
+ {
+  "id": "sh-0xe8k1q",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/6np1/9/7G1/7K1[gs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "g4h2+",
+   "h1h2",
+   "G@h3",
+   "h2g1",
+   "G@g2"
+  ]
+ },
+ {
+  "id": "sh-0xg6h1e",
+  "origin": "checks",
+  "fen": "1k7/sBl6/g8/3N5/9/9/9/9/7K1[RBL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@c9",
+   "b9b8",
+   "c9c8+",
+   "b8a9",
+   "B@b8"
+  ]
+ },
+ {
+  "id": "sh-0xrvglm",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/5+b2S/6B1b/6g1K/9[bgg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i3h2+",
+   "g3h2",
+   "f4h2"
+  ]
+ },
+ {
+  "id": "sh-0xt6tld",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/9/PN+p+b5/1G7/K2g5[rg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@c1",
+   "b2b1",
+   "d3b1"
+  ]
+ },
+ {
+  "id": "sh-0xvw59z",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/9/S+p7/P8/KB+b6/9[sp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@b3",
+   "a4b3",
+   "b4b3",
+   "a2a1",
+   "b3b2"
+  ]
+ },
+ {
+  "id": "sh-0yrgcaz",
+  "origin": "checks",
+  "fen": "4+RS1g1/7k1/8l/4B4/9/9/9/2K6/9[RP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@h5",
+   "h8g7",
+   "e9e7",
+   "g7g6",
+   "e6f7+"
+  ]
+ },
+ {
+  "id": "sh-0znsklb",
+  "origin": "checks",
+  "fen": "2RS5/3k5/2s3S2/4s4/9/9/9/K8/9[G] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "c9c8+",
+   "d8e7",
+   "c8c7",
+   "e6d7",
+   "G@f6"
+  ]
+ },
+ {
+  "id": "sh-1020314",
+  "origin": "checks",
+  "fen": "5s2b/6bk1/4+R4/4+BS1p1/9/9/9/9/4K4[L] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 5,
+  "line": [
+   "f6g7+",
+   "h8h9",
+   "g7g8",
+   "f9g8",
+   "e7h7",
+   "i9h8",
+   "e6g8",
+   "h9i9",
+   "g8h8"
+  ]
+ },
+ {
+  "id": "sh-10k2gap",
+  "origin": "checks",
+  "fen": "9/4k4/9/9/1n7/2S6/9/K1l6/1P1g5[r] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@a3",
+   "a2b2",
+   "a3c3+",
+   "b2a1",
+   "c3a3"
+  ]
+ },
+ {
+  "id": "sh-10qihjw",
+  "origin": "checks",
+  "fen": "9/4k4/9/9/9/+r2g5/9/2S6/bK1P5[rp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@b3",
+   "c2b3",
+   "a4b3",
+   "R@b2",
+   "a1b2+"
+  ]
+ },
+ {
+  "id": "sh-119j7tz",
+  "origin": "checks",
+  "fen": "9/6k2/9/9/1+b7/9/G8/1K1L5/PG1+r5[rs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "d1d2",
+   "b1c2",
+   "S@c3",
+   "b2b3",
+   "d2c2"
+  ]
+ },
+ {
+  "id": "sh-11eqpj9",
+  "origin": "checks",
+  "fen": "7k1/9/9/9/2+p6/S8/P8/1K1B5/r8[rgs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@a2",
+   "b2c3",
+   "S@c4"
+  ]
+ },
+ {
+  "id": "sh-12javs3",
+  "origin": "checks",
+  "fen": "1k1n5/3b5/1g1g5/N2+B5/9/9/9/9/4K4[RSL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@b8",
+   "b7b8",
+   "d6b8"
+  ]
+ },
+ {
+  "id": "sh-12x1ixo",
+  "origin": "checks",
+  "fen": "9/6k2/9/9/9/4n4/2+b1l4/9/BK7[sl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@c2",
+   "b1a2",
+   "L@a9"
+  ]
+ },
+ {
+  "id": "sh-13s8g6g",
+  "origin": "checks",
+  "fen": "7k1/7l1/6P2/9/9/9/9/9/4K4[SL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@g8",
+   "h9i9",
+   "L@i1"
+  ]
+ },
+ {
+  "id": "sh-13vdocr",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/9/2l6/1n4+r2/2N6/4K1P2[glp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g3e3",
+   "e1d1",
+   "L@d2"
+  ]
+ },
+ {
+  "id": "sh-141irzg",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/9/2+p6/P1n6/K1L6/9[sl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@b3",
+   "a2a1",
+   "L@a2"
+  ]
+ },
+ {
+  "id": "sh-145j4m9",
+  "origin": "checks",
+  "fen": "1p7/k8/9/9/1N7/9/9/6K2/9[RGG] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@a7",
+   "a8a9",
+   "R@a8"
+  ]
+ },
+ {
+  "id": "sh-14spyun",
+  "origin": "checks",
+  "fen": "4R2p1/7kB/9/4S2s1/9/9/9/9/2K6[S] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e9h9+",
+   "h8g7",
+   "h9g9",
+   "g7f6",
+   "i8f5+"
+  ]
+ },
+ {
+  "id": "sh-14tf66u",
+  "origin": "checks",
+  "fen": "1k7/1p7/1B7/+P8/9/9/9/4K4/9[GL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@c8",
+   "b9a9",
+   "L@a7"
+  ]
+ },
+ {
+  "id": "sh-15dlxs7",
+  "origin": "checks",
+  "fen": "9/4k4/9/9/9/s8/2l6/1lL6/K1G6[r] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@a3",
+   "a1b2",
+   "a4b3+",
+   "b2b1",
+   "b3a2"
+  ]
+ },
+ {
+  "id": "sh-15fx8sg",
+  "origin": "checks",
+  "fen": "8k/9/6S1b/5B1P1/9/9/9/K8/9[B] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g7g8+",
+   "i7h8",
+   "g8h8"
+  ]
+ },
+ {
+  "id": "sh-15w2gg2",
+  "origin": "checks",
+  "fen": "3k5/4bp3/1+R2p4/9/9/9/9/9/6K2[GSP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@c8",
+   "d9e9",
+   "b7b9",
+   "e8d9",
+   "b9d9"
+  ]
+ },
+ {
+  "id": "sh-17uxm62",
+  "origin": "checks",
+  "fen": "9/5+B1k1/6p1s/6b2/9/9/9/K8/9[GGS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "G@g8",
+   "h8i8",
+   "S@h9",
+   "i8h7",
+   "f8g7",
+   "h7i6",
+   "G@i5"
+  ]
+ },
+ {
+  "id": "sh-183ajdo",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/5r1n1/4+p4/5S3/7K1/5P3[ggs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@g3",
+   "h2g1",
+   "S@h2"
+  ]
+ },
+ {
+  "id": "sh-18o4ilm",
+  "origin": "checks",
+  "fen": "4k4/1P1b5/3L+B4/9/9/9/9/1K7/9[N] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "d7d8+",
+   "e9f9",
+   "B@h7"
+  ]
+ },
+ {
+  "id": "sh-1953rhm",
+  "origin": "checks",
+  "fen": "5k3/9/9/9/9/9/4+p4/2N6/1K7[rg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@b3",
+   "b1a1",
+   "G@b2"
+  ]
+ },
+ {
+  "id": "sh-1a2ogcp",
+  "origin": "checks",
+  "fen": "pk7/g2lG4/g8/2N6/9/9/9/9/6K2[GSS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@c9",
+   "b9c9",
+   "e8d8",
+   "c9b9",
+   "S@c8"
+  ]
+ },
+ {
+  "id": "sh-1b6431m",
+  "origin": "checks",
+  "fen": "p8/kgp6/9/3L5/N8/9/9/9/6K2[RSL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "L@a6",
+   "b8a7",
+   "S@b7",
+   "a8b9",
+   "R@e9"
+  ]
+ },
+ {
+  "id": "sh-1bkrdb7",
+  "origin": "checks",
+  "fen": "k8/9/9/9/9/6+p2/5+r3/8K/7S1[gn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@i3",
+   "i2i1",
+   "N@h3"
+  ]
+ },
+ {
+  "id": "sh-1bzkmem",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/9/7p+r/5S3/5+p3/6GKL[bb] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "i4h3",
+   "g1h2",
+   "B@g2",
+   "f3g2",
+   "f2g2"
+  ]
+ },
+ {
+  "id": "sh-1d4p0b1",
+  "origin": "checks",
+  "fen": "6k2/9/9/9/p2+r5/9/LPl6/1K7/9[s] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "d5d2",
+   "b2a1",
+   "S@a2"
+  ]
+ },
+ {
+  "id": "sh-1dhdb65",
+  "origin": "checks",
+  "fen": "nB7/1k7/ns1S5/3g5/P8/9/9/7K1/9[RRP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@c8",
+   "b7c8",
+   "b9c8+",
+   "b8a8",
+   "R@b8"
+  ]
+ },
+ {
+  "id": "sh-1djjg5j",
+  "origin": "checks",
+  "fen": "3k5/9/9/9/9/9/5+rP2/9/6K2[rb] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@g2",
+   "g1h1",
+   "f3f1"
+  ]
+ },
+ {
+  "id": "sh-1e4dgri",
+  "origin": "checks",
+  "fen": "9/4pk3/3+R4G/4b4/9/9/9/1K7/9[SLP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "L@f6",
+   "e6f7",
+   "f6f7+",
+   "f8g9",
+   "d7d9"
+  ]
+ },
+ {
+  "id": "sh-1ekgypn",
+  "origin": "checks",
+  "fen": "7gn/6k1P/9/5L1+P1/9/9/9/9/2K6[BGP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@g7",
+   "g8g9",
+   "B@d6"
+  ]
+ },
+ {
+  "id": "sh-1eyadwc",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/9/9/5p3/3L5/2KsN4[rs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "S@c2",
+   "c1b2",
+   "R@b3",
+   "b2a2",
+   "b3b1+",
+   "a2a3",
+   "b1b3"
+  ]
+ },
+ {
+  "id": "sh-1fdwc0c",
+  "origin": "checks",
+  "fen": "9/4Bpk2/9/6N2/9/9/9/9/2K6[RBL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@h8",
+   "g8g9",
+   "L@g7"
+  ]
+ },
+ {
+  "id": "sh-1fnt5qk",
+  "origin": "checks",
+  "fen": "9/1k7/9/9/6+p2/5b3/5SP1N/4+b2K1/5P3[ggl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "L@h4",
+   "h2g1",
+   "G@h2"
+  ]
+ },
+ {
+  "id": "sh-1fotntj",
+  "origin": "checks",
+  "fen": "7k1/9/9/9/9/9/r8/1K1s5/2S6[rn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@a2",
+   "b2b1",
+   "N@c3"
+  ]
+ },
+ {
+  "id": "sh-1i1nf0n",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/9/9/5lPSG/5+rpK1/5G3[gs] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@g1",
+   "f1g1",
+   "f2g1",
+   "h2i2",
+   "G@h2"
+  ]
+ },
+ {
+  "id": "sh-1i8rdh8",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/9/1b1+p5/5+b3/1PK6/9[nl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "d4c3",
+   "c2b1",
+   "f3e4",
+   "b1a1",
+   "L@a3"
+  ]
+ },
+ {
+  "id": "sh-1ibi7og",
+  "origin": "checks",
+  "fen": "9/2k6/9/9/9/7n1/7PP/5sG2/7K1[sn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@i2",
+   "h1h2",
+   "N@g4"
+  ]
+ },
+ {
+  "id": "sh-1iclwfg",
+  "origin": "checks",
+  "fen": "9/k8/9/9/9/7n1/4+p+p3/5B3/7K1[b] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "f3g2",
+   "h1i1",
+   "B@h2"
+  ]
+ },
+ {
+  "id": "sh-1ijjvof",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/5+bg2/6pL1/9/6P1K/7P1[s] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g4g3+",
+   "i2i1",
+   "S@i2"
+  ]
+ },
+ {
+  "id": "sh-1iz33bi",
+  "origin": "checks",
+  "fen": "1sB6/k8/9/2g6/2P6/9/9/7K1/9[GN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@a7",
+   "a8a9",
+   "N@b7"
+  ]
+ },
+ {
+  "id": "sh-1jh71ft",
+  "origin": "checks",
+  "fen": "k8/9/9/9/8+r/3g1SP2/4sB3/4S1K2/9[rg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "i5i2",
+   "g2f1",
+   "e3f2"
+  ]
+ },
+ {
+  "id": "sh-1k04vqq",
+  "origin": "checks",
+  "fen": "9/6k2/9/9/9/P1P6/9/1K1b5/1P2+r4[ss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@b3",
+   "b2b3",
+   "e1b1",
+   "S@b2",
+   "S@b4"
+  ]
+ },
+ {
+  "id": "sh-1kd0tnk",
+  "origin": "checks",
+  "fen": "k8/9/9/9/8s/8s/6P2/8K/6r2[n] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g1g2+",
+   "i2i1",
+   "N@h3"
+  ]
+ },
+ {
+  "id": "sh-1lji6fb",
+  "origin": "checks",
+  "fen": "9/k8/9/9/8b/6P2/8p/7K1/5G2S[rgg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@h5",
+   "h2g1",
+   "G@h1",
+   "g1g2",
+   "G@g3"
+  ]
+ },
+ {
+  "id": "sh-1llp60b",
+  "origin": "checks",
+  "fen": "knp6/2s6/2G6/2+P6/9/9/9/9/5K3[SSN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@b8",
+   "a9a8",
+   "N@b6"
+  ]
+ },
+ {
+  "id": "sh-1locxet",
+  "origin": "checks",
+  "fen": "9/5k3/9/9/3b5/l8/GP7/KB7/2G6[sn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "N@b4",
+   "a2b1",
+   "S@a2",
+   "a3a2",
+   "a4a2+"
+  ]
+ },
+ {
+  "id": "sh-1ltktxg",
+  "origin": "checks",
+  "fen": "1k7/1l1l5/2S6/9/9/9/9/5K3/9[G] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@c8",
+   "b9a8",
+   "c8b8",
+   "a8a7",
+   "L@a1"
+  ]
+ },
+ {
+  "id": "sh-1mqojya",
+  "origin": "checks",
+  "fen": "9/1kp6/1b7/1+Bg6/L2B5/9/9/8K/9[S] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "a5a7+",
+   "b8c9",
+   "S@b8",
+   "c9d9",
+   "d5f7"
+  ]
+ },
+ {
+  "id": "sh-1n1nf93",
+  "origin": "checks",
+  "fen": "G1k1s4/9/2p6/N+R7/9/9/9/9/7K1[NNL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "b6b8",
+   "c9d9",
+   "N@e7"
+  ]
+ },
+ {
+  "id": "sh-1nih75x",
+  "origin": "checks",
+  "fen": "kpg6/g1g6/1+B1P5/P8/9/9/9/9/5K3[BGL] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "b7a8",
+   "a9a8",
+   "G@a7",
+   "a8a9",
+   "L@a8"
+  ]
+ },
+ {
+  "id": "sh-1o99h9s",
+  "origin": "checks",
+  "fen": "7k1/9/9/9/4+b4/1P1p5/9/1B1K5/4LS3[ggn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@d3",
+   "d2c1",
+   "G@c2"
+  ]
+ },
+ {
+  "id": "sh-1p4ukyj",
+  "origin": "checks",
+  "fen": "g8/k8/s1P6/2S6/9/9/9/9/6K2[RG] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@b7",
+   "a8b9",
+   "R@d9"
+  ]
+ },
+ {
+  "id": "sh-1qxu8mx",
+  "origin": "checks",
+  "fen": "9/1k7/9/9/9/9/4p2S1/4sN2P/5PsK1[bsp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "S@h2",
+   "h1g2",
+   "B@f3"
+  ]
+ },
+ {
+  "id": "sh-1r1nptu",
+  "origin": "checks",
+  "fen": "9/3k5/9/9/1+b7/9/9/K1P6/2G6[g] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "b5c4",
+   "a2a3",
+   "G@b3",
+   "a3a4",
+   "c4b4"
+  ]
+ },
+ {
+  "id": "sh-1r5y6nl",
+  "origin": "checks",
+  "fen": "2k6/9/9/9/4s4/4+p3P/4r4/7K1/9[ggg] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@h3",
+   "h2g1",
+   "G@g2"
+  ]
+ },
+ {
+  "id": "sh-1r6put1",
+  "origin": "checks",
+  "fen": "5+Rb1k/6Bgp/7g1/7+B1/9/9/9/9/4K4[S] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "f9g9",
+   "h8h9",
+   "g8h9+"
+  ]
+ },
+ {
+  "id": "sh-1rbtnp5",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/1g7/PP7/2r6/K1G6/9[n] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "c3c2+",
+   "a2a1",
+   "N@b3"
+  ]
+ },
+ {
+  "id": "sh-1rkop6y",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/9/PSp6/1P+br5/KG7[rss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 4,
+  "line": [
+   "c2b1",
+   "a1b1",
+   "G@c2",
+   "b3c2",
+   "c3c2+",
+   "b1a1",
+   "c2b2"
+  ]
+ },
+ {
+  "id": "sh-1rwidfb",
+  "origin": "checks",
+  "fen": "5GGsk/8p/6Gs1/9/9/9/9/2K6/9[GN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "g9h9",
+   "i9h9",
+   "S@h8"
+  ]
+ },
+ {
+  "id": "sh-1s0aix2",
+  "origin": "checks",
+  "fen": "6k2/9/9/9/9/4+r4/9/1K7/1P1L5[ggp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "e4b4",
+   "b2c2",
+   "G@c3",
+   "c2c1",
+   "G@c2"
+  ]
+ },
+ {
+  "id": "sh-1srcl31",
+  "origin": "checks",
+  "fen": "9/8k/9/9/4p4/bPG6/2n6/1K1G5/3P5[gsn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@b3",
+   "b2a1",
+   "S@a2"
+  ]
+ },
+ {
+  "id": "sh-1taaq3h",
+  "origin": "checks",
+  "fen": "5g3/4Sk1p1/7s1/7sL/9/9/9/9/2K6[GS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@f7",
+   "f8g9",
+   "e8f9+",
+   "g9h9",
+   "G@g9"
+  ]
+ },
+ {
+  "id": "sh-1txuik6",
+  "origin": "checks",
+  "fen": "k8/9/9/9/9/6s2/4+b1S1P/5+p1P1/7KG[ss] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@g2",
+   "h1i2",
+   "S@h3",
+   "h2h3",
+   "g4h3"
+  ]
+ },
+ {
+  "id": "sh-1udtvr6",
+  "origin": "checks",
+  "fen": "5n1pG/7k1/6s2/9/6+R1P/9/9/K8/9[RGS] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@i8",
+   "h8h7",
+   "S@g8"
+  ]
+ },
+ {
+  "id": "sh-1uh9d32",
+  "origin": "checks",
+  "fen": "8k/9/9/9/p1r6/SG7/9/K8/P8[snl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "c5c2+",
+   "a2a3",
+   "S@b2",
+   "a3a2",
+   "L@a3"
+  ]
+ },
+ {
+  "id": "sh-1ulpk9b",
+  "origin": "checks",
+  "fen": "9/1k7/9/9/9/2Pp5/9/2NPK1+b2/4s1B2[bbp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 5,
+  "line": [
+   "B@f3",
+   "e2e3",
+   "f3e4+",
+   "e3e2",
+   "e4f3",
+   "e2e1",
+   "B@f2",
+   "g1f2",
+   "g2f2"
+  ]
+ },
+ {
+  "id": "sh-1us0ufx",
+  "origin": "checks",
+  "fen": "6p1k/6sgb/7BL/8N/9/9/9/9/5K3[S] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "h7i8+",
+   "h8i8",
+   "S@h8"
+  ]
+ },
+ {
+  "id": "sh-1uvhlz8",
+  "origin": "checks",
+  "fen": "4k4/9/9/9/9/+p1l6/2SL5/2r6/1K7[gl] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "G@c1",
+   "b1a1",
+   "L@a2"
+  ]
+ },
+ {
+  "id": "sh-1uzhk8j",
+  "origin": "checks",
+  "fen": "9/8k/6s2/6s+R1/5+R1+P1/9/9/1K7/9[B] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "h6i6",
+   "i8h9",
+   "f5f9",
+   "h9h8",
+   "B@i9"
+  ]
+ },
+ {
+  "id": "sh-1wim44e",
+  "origin": "checks",
+  "fen": "kg7/s2G5/2N+B5/9/9/9/9/9/7K1[N] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 5,
+  "line": [
+   "c7b9+",
+   "a8b9",
+   "d7c7",
+   "b9b8",
+   "G@b9",
+   "a9b9",
+   "d8c8",
+   "b9a8",
+   "c7b8"
+  ]
+ },
+ {
+  "id": "sh-1wr6118",
+  "origin": "checks",
+  "fen": "9/1k7/9/9/7l1/9/3P5/5Ks2/2g2G3[gsn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "G@f3",
+   "f2e1",
+   "g2f1+",
+   "e1d2",
+   "G@c2"
+  ]
+ },
+ {
+  "id": "sh-1x62ar4",
+  "origin": "checks",
+  "fen": "9/7k1/9/9/9/+p8/g8/2Br5/LK1L5[rpp] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 2,
+  "line": [
+   "R@b2",
+   "b1c1",
+   "b2c2+"
+  ]
+ },
+ {
+  "id": "sh-1xslibi",
+  "origin": "checks",
+  "fen": "G1n3R2/3k5/1g7/1+R2s4/9/9/9/9/7K1[GP] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "b6d6",
+   "e6d7",
+   "g9g8+",
+   "d8e9",
+   "G@d8"
+  ]
+ },
+ {
+  "id": "sh-1y7dgg4",
+  "origin": "checks",
+  "fen": "7k1/9/9/9/p8/1B7/9/K8/9[rrn] b - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "R@c2",
+   "a2b3",
+   "R@b2",
+   "b3a3",
+   "N@b5"
+  ]
+ },
+ {
+  "id": "sh-1yu4lhu",
+  "origin": "checks",
+  "fen": "7s1/8k/5GN1l/6+P2/9/9/9/K8/9[SN] w - - 0 1",
+  "checksOnly": true,
+  "goal": "mate",
+  "mateIn": 3,
+  "line": [
+   "S@h7",
+   "i8i9",
+   "g7h9+",
+   "i9h9",
+   "S@h8"
+  ]
+ }
+]

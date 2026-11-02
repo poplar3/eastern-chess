@@ -25,10 +25,10 @@ export class Engine {
   wait(test) {
     return new Promise((resolve) => this.waiters.push({ test, resolve }));
   }
-  async init() {
+  async init(variant = process.env.VARIANT ?? 'janggi') {
     this.send('uci');
     await this.wait((l) => l === 'uciok');
-    this.send('setoption name UCI_Variant value janggi');
+    this.send(`setoption name UCI_Variant value ${variant}`);
     this.send('setoption name Threads value 1');
     this.send('setoption name Hash value 64');
     this.send('isready');

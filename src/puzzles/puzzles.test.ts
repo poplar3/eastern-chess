@@ -4,6 +4,9 @@ import { annotate } from './annotate';
 import bakboJson from './bakbo.json';
 import classicJson from './classic.json';
 import ownJson from './own.json';
+import shogiJson from './shogi.json';
+import xiangqiJson from './xiangqi.json';
+import { getVariant } from '../core/variants';
 import { allPuzzles } from '.';
 
 type Raw = {
@@ -86,4 +89,42 @@ describe('задачи', () => {
     expect(p.concepts).toContain('discovered');
     expect(p.concepts).not.toContain('mate-horse');
   });
+});
+
+describe('задачи Сянци и Сёги', () => {
+  const sets = [
+    ['xiangqi', xiangqiJson],
+    ['shogi', shogiJson],
+  ] as const;
+  for (const [game, json] of sets) {
+    const list = json as Raw[];
+    const v = getVariant(game);
+    it(`${game}: уникальные id и позиции, есть задачи`, () => {
+      expect(list.length).toBeGreaterThan(20);
+      expect(new Set(list.map((p) => p.id)).size).toBe(list.length);
+      expect(new Set(list.map((p) => p.fen)).size).toBe(list.length);
+    });
+    it.each(list.map((p) => [p.id, p] as const))(`${game} %s: решение корректно`, (_, p) => {
+      const g = new Game(p.fen, v);
+      const solver = g.turn;
+      for (const u of p.line) {
+        expect(g.result()).toBeNull();
+        g.playUci(u);
+      }
+      expect(p.line.length % 2).toBe(1);
+      if (p.checksOnly) g.history.forEach((h, i) => i % 2 === 0 && expect(h.check, `${p.id}: ход ${i + 1}`).toBe(true));
+      if (p.goal === 'mate') {
+        expect(g.result()).toEqual({ winner: solver, reason: 'checkmate' });
+        expect((p.line.length + 1) / 2).toBe(p.mateIn);
+      } else expect(p.gain).toBeGreaterThanOrEqual(3);
+    });
+    it(`${game}: разметка есть у всех`, () => {
+      for (const p of allPuzzles(game)) {
+        expect(p.concepts.length).toBeGreaterThan(0);
+        expect(p.hints).toHaveLength(3);
+        expect(p.explanation.length).toBeGreaterThan(10);
+        expect(p.solution).toHaveLength(p.line.length);
+      }
+    });
+  }
 });

@@ -1,16 +1,26 @@
+import type { GameId } from '../core/types';
 import { allPuzzles } from '../puzzles';
 import { LESSONS } from './lessons';
+import { SHOGI_LESSONS } from './lessonsShogi';
+import { XIANGQI_LESSONS } from './lessonsXiangqi';
 import type { ConcreteTask, Lesson } from './types';
 
 export { LESSONS } from './lessons';
+export { SHOGI_LESSONS } from './lessonsShogi';
+export { XIANGQI_LESSONS } from './lessonsXiangqi';
+
+/** Курс обучения для игры. */
+export function lessonsFor(game: GameId): Lesson[] {
+  return game === 'xiangqi' ? XIANGQI_LESSONS : game === 'shogi' ? SHOGI_LESSONS : LESSONS;
+}
 export type { ConcreteTask, Diagram, Lesson, TheoryBlock } from './types';
 
 /** Задания урока, где подборки задач заменены конкретными задачами (самыми простыми подходящими). */
-export function lessonTasks(lesson: Lesson): ConcreteTask[] {
+export function lessonTasks(lesson: Lesson, game: GameId = 'janggi'): ConcreteTask[] {
   const used = new Set<string>();
   return lesson.tasks.flatMap((t): ConcreteTask[] => {
     if (t.kind !== 'puzzles') return [t];
-    return allPuzzles()
+    return allPuzzles(game)
       .filter((p) => {
         const moves = (p.line.length + 1) / 2;
         return p.concepts.includes(t.concept) && moves <= (t.maxMoves ?? 9) && moves >= (t.minMoves ?? 1) && p.level.n >= (t.minLevel ?? 1) && !used.has(p.id);
@@ -51,6 +61,6 @@ export function saveProgress(p: Record<string, number[]>) {
   }
 }
 
-export function lessonById(id: string) {
-  return LESSONS.find((l) => l.id === id);
+export function lessonById(id: string, game: GameId = 'janggi') {
+  return lessonsFor(game).find((l) => l.id === id);
 }
