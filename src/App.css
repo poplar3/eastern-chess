@@ -69,6 +69,10 @@
   /* 624 / 688 — пропорции доски; 150px — шапка, отступы и строка просмотра */
   width: min(100%, calc((100vh - 150px) * 0.907));
 }
+/* Сёги: доска 648 × 800 вместе с руками. */
+.app[data-game='shogi'] .board-wrap {
+  width: min(100%, calc((100vh - 150px) * 0.81));
+}
 .view-banner {
   display: flex;
   align-items: center;
@@ -114,6 +118,39 @@
 .piece-icon .hanja {
   font-family: 'JanggiHanja', 'Batang', 'SimSun', serif;
   font-weight: 700;
+}
+.board .hanja-xq,
+.piece-icon .hanja-xq,
+.board .river {
+  font-family: 'XiangqiHan', 'PMingLiU', 'SimSun', serif;
+  font-weight: 700;
+}
+.board .hanja-sh,
+.piece-icon .hanja-sh,
+.board .coord-kanji {
+  font-family: 'ShogiKanji', 'Yu Mincho', 'MS Mincho', serif;
+  font-weight: 700;
+}
+.promo-mark {
+  font-weight: 800;
+  font-family: system-ui, sans-serif;
+}
+.board .river {
+  font-size: 30px;
+  fill: #6b4a24;
+  opacity: 0.8;
+}
+.app[data-game='xiangqi'] {
+  --cho: #b8231f;
+  --han: #2b2b2b;
+  --cho-soft: rgba(184, 35, 31, 0.35);
+  --han-soft: rgba(43, 43, 43, 0.2);
+}
+.app[data-game='shogi'] {
+  --cho: #2b2118;
+  --han: #8a5a1c;
+  --cho-soft: rgba(43, 33, 24, 0.35);
+  --han-soft: rgba(138, 90, 28, 0.2);
 }
 
 .eval-bar {
@@ -1009,6 +1046,9 @@ body {
   .board-wrap {
     width: min(100%, calc((100dvh - 60px) * 0.907));
   }
+  .app[data-game='shogi'] .board-wrap {
+    width: min(100%, calc((100dvh - 60px) * 0.81));
+  }
   .side {
     width: 300px;
   }
@@ -1017,4 +1057,85 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(60, 35, 10, 0.25);
   }
+}
+
+/* ---------- Несколько игр ---------- */
+.board .hand-tray {
+  fill: rgba(214, 170, 96, 0.28);
+  stroke: rgba(91, 58, 23, 0.25);
+  stroke-width: 1.5;
+}
+.board .hand-count {
+  font-size: 14px;
+  font-weight: 700;
+  fill: #fff;
+  pointer-events: none;
+}
+.board .hand-piece.active {
+  cursor: pointer;
+}
+.brand-mark.brand-xiangqi {
+  font-family: 'XiangqiHan', serif;
+}
+.brand-mark.brand-shogi {
+  font-family: 'ShogiKanji', serif;
+}
+.game-switch {
+  margin: 0 12px;
+  gap: 4px;
+}
+.game-switch button {
+  padding: 5px 12px;
+  background: transparent;
+  color: #f7ecd2;
+  border: 1px solid #6b5236;
+  font-size: 14px;
+}
+.game-switch button:hover {
+  background: #4d3923;
+}
+.game-switch button.active {
+  background: #f7ecd2;
+  color: #3b2a1a;
+  border-color: #f7ecd2;
+  font-weight: 600;
+}
+@media (max-width: 760px) {
+  .game-switch {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+  .game-switch button {
+    padding: 4px 6px;
+  }
+}
+.game-choice button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.game-choice-name {
+  font-weight: 600;
+}
+.promo-choice {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.promo-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 140px;
+  padding: 12px;
+}
+.hand-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-right: 4px;
 }

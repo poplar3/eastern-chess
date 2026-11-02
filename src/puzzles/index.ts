@@ -1,10 +1,14 @@
 import bakbo from './bakbo.json';
 import classic from './classic.json';
 import own from './own.json';
+import shogi from './shogi.json';
+import xiangqi from './xiangqi.json';
+import type { GameId } from '../core/types';
+import { getVariant } from '../core/variants';
 import { annotate, type Puzzle, type PuzzleData } from './annotate';
 
-export { LEVELS, type Puzzle } from './annotate';
-export { CONCEPTS, type ConceptId } from './concepts';
+export { LEVELS, levelsFor, type Puzzle } from './annotate';
+export { CONCEPTS, conceptsFor, type ConceptId } from './concepts';
 
 const OWN_SOURCE = {
   game: { author: 'Задачи приложения', title: 'Позиция из партии Fairy-Stockfish, решение проверено движком на единственность' },
@@ -15,21 +19,33 @@ const OWN_SOURCE = {
 /** Задача взята из корейского источника, а не составлена приложением. */
 export const isClassic = (p: PuzzleData) => p.id.startsWith('classic-');
 
-let cache: Puzzle[] | null = null;
+const OTHER_SOURCE: Record<string, { author: string; title: string }> = {
+  game: OWN_SOURCE.game,
+  compose: OWN_SOURCE.compose,
+  checks: { author: 'Задачи приложения', title: 'Составлена с помощью Fairy-Stockfish: каждый ход решающего — шах; решение проверено движком на единственность' },
+};
 
-/** Все задачи, от простых к сложным. */
-export function allPuzzles(): Puzzle[] {
-  if (cache) return cache;
+const cache: Partial<Record<GameId, Puzzle[]>> = {};
+
+const sortPuzzles = (list: Puzzle[]) =>
+  list.sort((a, b) => a.level.n - b.level.n || (a.mateIn ?? 9) - (b.mateIn ?? 9) || a.line.length - b.line.length || a.id.localeCompare(b.id));
+
+/** Все задачи игры, от простых к сложным. */
+export function allPuzzles(game: GameId = 'janggi'): Puzzle[] {
+  const hit = cache[game];
+  if (hit) return hit;
+  if (game !== 'janggi') {
+    const v = getVariant(game);
+    const raw = (game === 'xiangqi' ? xiangqi : shogi) as (PuzzleData & { origin: string })[];
+    return (cache[game] = sortPuzzles(raw.map(({ origin, ...d }) => annotate({ ...d, source: OTHER_SOURCE[origin] ?? OWN_SOURCE.game }, v))));
+  }
   const data = [...own, ...bakbo, ...classic] as (PuzzleData & { origin: keyof typeof OWN_SOURCE | 'classic' })[];
   // Задачи из корейских источников несут ссылку на источник сами, остальные составлены приложением.
   const raw: PuzzleData[] = data.map(({ origin, ...d }) => ({
     ...d,
     source: origin === 'classic' ? d.source : OWN_SOURCE[origin],
   }));
-  cache = raw
-    .map(annotate)
-    .sort((a, b) => a.level.n - b.level.n || (a.mateIn ?? 9) - (b.mateIn ?? 9) || a.line.length - b.line.length || a.id.localeCompare(b.id));
-  return cache;
+  return (cache.janggi = sortPuzzles(raw.map((d) => annotate(d))));
 }
 
 const KEY = 'janggi.puzzles.solved';

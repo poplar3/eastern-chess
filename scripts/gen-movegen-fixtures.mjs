@@ -1,11 +1,11 @@
 // Генерирует эталонные позиции и списки легальных ходов с помощью Fairy-Stockfish.
-// Использование: node scripts/gen-movegen-fixtures.mjs <путь к fairy-stockfish> [игр] [seed]
-// Результат: src/core/__fixtures__/fsf-movegen.json
+// Использование: node scripts/gen-movegen-fixtures.mjs <путь к fairy-stockfish> [игр] [seed] [janggi|xiangqi|shogi]
+// Результат: src/core/__fixtures__/fsf-movegen.json (Чанги) или fsf-movegen-<игра>.json
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 
-const [enginePath, gamesArg = '60', seedArg = '1'] = process.argv.slice(2);
+const [enginePath, gamesArg = '60', seedArg = '1', variant = 'janggi'] = process.argv.slice(2);
 if (!enginePath) {
   console.error('Укажите путь к движку');
   process.exit(1);
@@ -35,30 +35,35 @@ const send = (cmd, done) =>
   });
 
 await send('uci', (l) => l === 'uciok');
-await send('setoption name UCI_Variant value janggi\nisready', (l) => l === 'readyok');
+await send(`setoption name UCI_Variant value ${variant}\nisready`, (l) => l === 'readyok');
 
 const SETUPS = ['rnba1abnr', 'rbna1anbr', 'rnba1anbr', 'rbna1abnr'];
 const positions = [];
 for (let g = 0; g < Number(gamesArg); g++) {
   const top = SETUPS[Math.floor(rand() * 4)];
   const bottom = SETUPS[Math.floor(rand() * 4)].toUpperCase();
-  const startFen = `${top}/4k4/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/4K4/${bottom} w - - 0 1`;
+  const startFen =
+    variant === 'janggi'
+      ? `${top}/4k4/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/4K4/${bottom} w - - 0 1`
+      : variant === 'xiangqi'
+        ? 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1'
+        : 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL[] w - - 0 1';
   const moves = [];
   for (let ply = 0; ply < 160; ply++) {
     const pos = `position fen ${startFen}${moves.length ? ' moves ' + moves.join(' ') : ''}`;
     const out = await send(`${pos}\ngo perft 1`, (l) => l.startsWith('Nodes searched'));
-    const legal = out.filter((l) => /^[a-i]\d+[a-i]\d+: 1$/.test(l)).map((l) => l.split(':')[0]).sort();
+    const legal = out.filter((l) => /^([a-i]\d+[a-i]\d+\+?|[A-Z]@[a-i]\d+): 1$/.test(l)).map((l) => l.split(':')[0]).sort();
     const d = await send('d', (l) => l.startsWith('Chased'));
     const fen = d.find((l) => l.startsWith('Fen: ')).slice(5);
     if (ply % 4 === 0) positions.push([fen, legal.join(' ')]);
     if (!legal.length) break;
     // Пропуск хода выбираем редко, иначе партии быстро заканчиваются
-    const nonPass = legal.filter((m) => { const [, a, b] = /^([a-i]\d+)([a-i]\d+)$/.exec(m); return a !== b; });
+    const nonPass = legal.filter((m) => { const x = /^([a-i]\d+)([a-i]\d+)$/.exec(m); return !x || x[1] !== x[2]; });
     const pool = nonPass.length && rand() < 0.97 ? nonPass : legal;
     moves.push(pool[Math.floor(rand() * pool.length)]);
   }
 }
 proc.stdin.write('quit\n');
 mkdirSync('src/core/__fixtures__', { recursive: true });
-writeFileSync('src/core/__fixtures__/fsf-movegen.json', JSON.stringify(positions));
+writeFileSync(`src/core/__fixtures__/fsf-movegen${variant === 'janggi' ? '' : '-' + variant}.json`, JSON.stringify(positions));
 console.log(`Позиций: ${positions.length}`);

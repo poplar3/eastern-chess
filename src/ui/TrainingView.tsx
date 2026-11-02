@@ -8,14 +8,27 @@ import { describePlan } from '../analysis/plan';
 import { getEngine, type PvInfo, type Score } from '../engine/engine';
 import { Board, type Arrow } from './Board';
 import type { PieceStyle } from './pieces';
+import type { Variant } from '../core/types';
 
 const GREEN = '#1f8a4c';
 const GRAY = '#7b8794';
 const BLUE = '#2f6fd6';
 
-export function TrainingView({ style }: { style: PieceStyle }) {
+export function TrainingView({ style, variant }: { style: PieceStyle; variant?: Variant }) {
   const [progress, setProgress] = useState(loadProgress);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  if (variant && variant.id !== 'janggi') {
+    return (
+      <div className="puzzles">
+        <div className="puzzles-head">
+          <div>
+            <h2>Обучение</h2>
+            <div className="muted">Курс обучения для игры {variant.name} пока готовится. Правила кратко описаны по кнопке «Правила».</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const markDone = (id: string, task: number) =>
     setProgress((p) => {

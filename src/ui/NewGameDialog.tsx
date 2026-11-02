@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { SETUPS, randomSetup, setupName, type Color, type Setup } from '../core/rules';
-import { BOT_LEVELS } from '../engine/engine';
+import { GAME_IDS, getVariant, VARIANTS } from '../core/variants';
+import { BOT_LEVELS, levelRank } from '../engine/engine';
 import type { GameConfig } from '../settings';
 import { Modal } from './Modal';
-import { PieceIcon, SIDE_NAMES, type PieceStyle } from './pieces';
+import { PieceIcon, type PieceStyle } from './pieces';
 
 interface Props {
   initial: GameConfig;
@@ -45,11 +46,17 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
   const [c, setC] = useState<GameConfig>(initial);
   const [step, setStep] = useState<Step>('settings');
   const set = <K extends keyof GameConfig>(k: K, v: GameConfig[K]) => setC((x) => ({ ...x, [k]: v }));
+  const variant = getVariant(c.variant);
+  const janggi = variant.id === 'janggi';
+  const S = variant.sides;
 
   const startVsBot = () => {
     const botColor = c.humanColor === 'w' ? 'b' : 'w';
-    onStart({ ...c, [setupKey(botColor)]: randomSetup() });
+    onStart(janggi ? { ...c, [setupKey(botColor)]: randomSetup() } : c);
   };
+  const preview = variant.id === 'shogi' ? ['R', 'B', '+P', 'k'] : ['R', 'N', 'C', 'k'];
+  const sideNote = (col: Color) =>
+    janggi ? (col === 'w' ? ' (ходит первым)' : ' (+1,5 очка)') : col === 'w' ? (variant.id === 'xiangqi' ? ' (ходят первыми)' : ' (ходит первым)') : '';
 
   let body: ReactNode;
   let footer: ReactNode;
@@ -63,12 +70,24 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
     body = (
       <div className="form-grid">
         <div className="field">
+          <label>Игра</label>
+          <div className="segmented game-choice">
+            {GAME_IDS.map((id) => (
+              <button key={id} className={c.variant === id ? 'active' : ''} onClick={() => set('variant', id)}>
+                <span className="game-choice-name">{VARIANTS[id].name}</span>
+                <span className="muted small">{VARIANTS[id].subtitle}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
           <label>Вид фигур</label>
           <div className="segmented">
             {(['icons', 'hanja'] as const).map((s) => (
               <button key={s} className={c.pieceStyle === s ? 'active' : ''} onClick={() => set('pieceStyle', s)}>
                 <span className="style-preview">
-                  {['R', 'N', 'C', 'k'].map((p) => <PieceIcon key={p} piece={p} style={s} size={30} />)}
+                  {preview.map((p) => <PieceIcon key={p} piece={p} style={s} size={30} game={variant.id} />)}
                 </span>
                 {s === 'icons' ? 'Европейские иконки' : 'Традиционные иероглифы'}
               </button>
@@ -95,8 +114,8 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
               <div className="segmented">
                 {(['w', 'b'] as const).map((col) => (
                   <button key={col} className={c.humanColor === col ? 'active' : ''} onClick={() => set('humanColor', col)}>
-                    <PieceIcon piece={col === 'w' ? 'K' : 'k'} style={c.pieceStyle} size={26} /> {SIDE_NAMES[col]}
-                    {col === 'w' ? ' (ходит первым)' : ' (+1,5 очка)'}
+                    <PieceIcon piece={col === 'w' ? 'K' : 'k'} style={c.pieceStyle} size={26} game={variant.id} /> {S[col]}
+                    {sideNote(col)}
                   </button>
                 ))}
               </div>
@@ -104,18 +123,26 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
             <div className="field">
               <label>Сила компьютера</label>
               <select value={c.level} onChange={(e) => set('level', Number(e.target.value))}>
-                {BOT_LEVELS.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.id}. {l.name} — {l.rank}
-                    {l.elo ? `, ≈${l.elo} Elo` : l.id === 1 ? ', < 500 Elo' : ''}
-                  </option>
-                ))}
+                {BOT_LEVELS.map((l) => {
+                  const rank = levelRank(l, variant.id);
+                  const elo = l.elo ? `≈${l.elo} Elo` : l.id === 1 ? '< 500 Elo' : '';
+                  return (
+                    <option key={l.id} value={l.id}>
+                      {l.id}. {l.name}
+                      {[rank, elo].filter(Boolean).length ? ` — ${[rank, elo].filter(Boolean).join(', ')}` : ''}
+                    </option>
+                  );
+                })}
               </select>
               <p className="hint">
-                Уровни идут от новичка (18 кып) до полной силы движка. Корейские разряды: кып — ученические, от 18 до
-                1; дан — мастерские. Elo приблизительный.
+                {variant.id === 'janggi' &&
+                  'Уровни идут от новичка (18 кып) до полной силы движка. Корейские разряды: кып — ученические, от 18 до 1; дан — мастерские. Elo приблизительный.'}
+                {variant.id === 'shogi' &&
+                  'Уровни идут от новичка (15 кю) до полной силы движка. Разряды сёги: кю — ученические, дан — мастерские. Соответствие разрядам и Elo приблизительное.'}
+                {variant.id === 'xiangqi' && 'Уровни идут от новичка до полной силы движка. Elo приблизительный.'}
               </p>
             </div>
+            {janggi && (
             <div className="field">
               <label>Ваша расстановка слонов и коней</label>
               <SetupPicker
@@ -128,20 +155,23 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
                 Слева направо — так, как вы видите свою первую линию. Компьютер выберет свою расстановку сам.
               </p>
             </div>
+            )}
           </>
-        ) : (
+        ) : janggi ? (
           <p className="hint">
             На следующем шаге каждый игрок сам выберет, как поставить своих слонов и коней: по правилам сначала Хан,
             затем Чо.
           </p>
+        ) : (
+          <p className="hint">Оба игрока ходят по очереди за одним компьютером. Доску можно переворачивать кнопкой.</p>
         )}
       </div>
     );
     footer = (
       <>
         {cancel}
-        {c.mode === 'bot' ? (
-          <button className="btn primary" onClick={startVsBot}>
+        {c.mode === 'bot' || !janggi ? (
+          <button className="btn primary" onClick={c.mode === 'bot' ? startVsBot : () => onStart(c)}>
             Начать партию
           </button>
         ) : (
@@ -157,7 +187,7 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
       <div className="form-grid">
         <div className="field">
           <label>
-            <PieceIcon piece={col === 'w' ? 'K' : 'k'} style={c.pieceStyle} size={26} /> {SIDE_NAMES[col]} выбирает
+            <PieceIcon piece={col === 'w' ? 'K' : 'k'} style={c.pieceStyle} size={26} /> {S[col]} выбирает
             расстановку слонов и коней
           </label>
           <SetupPicker color={col} value={c[setupKey(col)]} style={c.pieceStyle} onChange={(s) => set(setupKey(col), s)} />

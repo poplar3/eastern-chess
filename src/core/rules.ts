@@ -2,11 +2,12 @@
 // Семантика совпадает с вариантом "janggi" движка Fairy-Stockfish:
 // мат, пропуск хода, биджанг, подсчёт очков, правило 100 полуходов и повторений.
 
-export type Color = 'w' | 'b'; // w = Чо (初/楚, ходит первым), b = Хан (漢)
+import { colorOf, opposite, type Board, type Color, type Move, type Piece, type Position } from './types';
+
+// w = Чо (初/楚, ходит первым), b = Хан (漢). Фигура хранится символом FEN: заглавная — Чо, строчная — Хан.
+export type { Board, Color, Move, Piece, Position } from './types';
+export { colorOf, isPass, opposite } from './types';
 export type PieceType = 'K' | 'A' | 'B' | 'N' | 'R' | 'C' | 'P';
-// Фигура хранится символом FEN: заглавная — Чо, строчная — Хан.
-export type Piece = string;
-export type Board = (Piece | null)[];
 
 export const FILES = 9;
 export const RANKS = 10;
@@ -18,27 +19,13 @@ export const START_FEN = 'rnba1abnr/4k4/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/4K4/
 export const PIECE_VALUES: Record<PieceType, number> = { K: 0, R: 13, C: 7, N: 5, B: 3, A: 3, P: 2 };
 export const HAN_BONUS = 1.5;
 
-export interface Move {
-  from: number;
-  to: number;
-}
-
-export interface Position {
-  board: Board;
-  turn: Color;
-  halfmove: number; // полуходов без взятия
-  fullmove: number;
-}
-
 export const sq = (file: number, rank: number) => rank * FILES + file;
 export const fileOf = (s: number) => s % FILES;
 export const rankOf = (s: number) => Math.floor(s / FILES);
 export const onBoard = (f: number, r: number) => f >= 0 && f < FILES && r >= 0 && r < RANKS;
 
-export const colorOf = (p: Piece): Color => (p === p.toUpperCase() ? 'w' : 'b');
 export const typeOf = (p: Piece): PieceType => p.toUpperCase() as PieceType;
-export const opposite = (c: Color): Color => (c === 'w' ? 'b' : 'w');
-export const isPass = (m: Move) => m.from === m.to;
+const isPass = (m: Move) => m.from === m.to;
 
 export function squareName(s: number): string {
   return FILE_LETTERS[fileOf(s)] + (rankOf(s) + 1);

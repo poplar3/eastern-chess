@@ -1,8 +1,7 @@
 // Словесное описание варианта (плана), найденного движком.
 import { Game } from '../core/game';
-import { formatMove } from '../core/notation';
-import { colorOf, isPass, PIECE_VALUES, typeOf, type Color } from '../core/rules';
-import { PIECE_NAMES, SIDE_NAMES } from '../ui/pieces';
+import { JANGGI } from '../core/janggi';
+import { colorOf, isPass, plural, type Color, type Variant } from '../core/types';
 
 export interface PlanSummary {
   moves: string[];
@@ -11,11 +10,10 @@ export interface PlanSummary {
   text: string;
 }
 
-const gen = (t: keyof typeof PIECE_NAMES) =>
-  ({ K: 'генерала', A: 'стража', B: 'слона', N: 'коня', R: 'колесницу', C: 'пушку', P: 'солдата' })[t];
+const fmt = (n: number) => n.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
 
-export function describePlan(fen: string, pv: string[], maxPlies = 8): PlanSummary {
-  const g = new Game(fen);
+export function describePlan(fen: string, pv: string[], maxPlies = 8, variant: Variant = JANGGI): PlanSummary {
+  const g = new Game(fen, variant);
   const moves: string[] = [];
   const gains: Record<Color, { names: string[]; points: number }> = { w: { names: [], points: 0 }, b: { names: [], points: 0 } };
   const checks: Record<Color, number> = { w: 0, b: 0 };
@@ -27,26 +25,32 @@ export function describePlan(fen: string, pv: string[], maxPlies = 8): PlanSumma
     } catch {
       break;
     }
-    moves.push(formatMove(h));
+    moves.push(variant.formatMove(h));
     const c = colorOf(h.piece);
     if (h.captured) {
-      gains[c].names.push(gen(typeOf(h.captured)));
-      gains[c].points += PIECE_VALUES[typeOf(h.captured)];
+      gains[c].names.push(variant.pieceInfo(h.captured).acc);
+      gains[c].points += variant.pieceValue(h.captured);
     }
     if (h.check) checks[c]++;
     if (isPass(h.move)) passes++;
   }
+  const S = variant.sides;
   const first = g.history[0] ? colorOf(g.history[0].piece) : 'w';
   const parts: string[] = [];
   const result = g.result();
-  if (result?.reason === 'checkmate') parts.push(`Вариант ведёт к мату: побеждает ${SIDE_NAMES[result.winner]}.`);
-  else if (result) parts.push(`Вариант заканчивает партию: побеждает ${SIDE_NAMES[result.winner]}.`);
+  if (result?.reason === 'checkmate') parts.push(`Вариант ведёт к мату: побеждает ${S[result.winner!]}.`);
+  else if (result && result.winner) parts.push(`Вариант заканчивает партию: побеждает ${S[result.winner]}.`);
+  else if (result) parts.push('Вариант ведёт к ничьей.');
+  const unit = variant.id === 'janggi' ? 'очк.' : '';
   for (const c of [first, first === 'w' ? 'b' : 'w'] as Color[]) {
-    if (gains[c].names.length) parts.push(`${SIDE_NAMES[c]} забирает ${gains[c].names.join(', ')} (${gains[c].points} очк.).`);
+    if (!gains[c].names.length) continue;
+    const pts = unit ? `${gains[c].points} ${unit}` : `${fmt(gains[c].points)} ${plural(Math.round(gains[c].points), 'очко', 'очка', 'очков')}`;
+    parts.push(`${S[c]} забирает ${gains[c].names.join(', ')} (${pts}).`);
   }
   const net = gains[first].points - gains[first === 'w' ? 'b' : 'w'].points;
   if (!result && net === 0 && (gains.w.names.length || gains.b.names.length)) parts.push('Размен равный.');
-  if (checks[first] >= 2) parts.push(`${SIDE_NAMES[first]} атакует генерала шахами.`);
+  if (checks[first] >= 2) parts.push(`${S[first]} атакует ${variant.kingAcc} шахами.`);
+  if (variant.hasHands && g.history.some((h) => h.move.from < 0)) parts.push('В варианте есть сброс фигур из руки.');
   if (!parts.length) parts.push(passes ? 'Выжидательный вариант с пропусками хода.' : 'Позиционный манёвр без немедленных взятий.');
   return { moves, reply: moves[1] ?? null, text: parts.join(' ') };
 }

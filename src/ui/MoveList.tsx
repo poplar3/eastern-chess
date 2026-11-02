@@ -3,7 +3,7 @@ import type { MoveReview } from '../analysis/evaluator';
 import { QUALITY_INFO } from '../analysis/quality';
 import type { Game } from '../core/game';
 import { formatMove } from '../core/notation';
-import { colorOf } from '../core/rules';
+import { colorOf } from '../core/types';
 
 interface Props {
   game: Game;
@@ -46,7 +46,7 @@ export function MoveList({ game, reviews, viewPly, onSelect }: Props) {
           onClick={() => onSelect(ply)}
           title={info ? `${info.ru}${r!.loss >= 1 ? ` (−${Math.round(r!.loss)}% шансов)` : ''}` : undefined}
         >
-          {formatMove(h)}
+          {formatMove(h, game.variant)}
           {info && (
             <span className="q-badge" style={{ background: info.color }}>
               {info.mark || '•'}
@@ -59,7 +59,9 @@ export function MoveList({ game, reviews, viewPly, onSelect }: Props) {
 
   return (
     <div className="moves" ref={ref}>
-      {rows.length === 0 && <div className="muted small">Первым ходит Чо.</div>}
+      {rows.length === 0 && (
+        <div className="muted small">{game.variant.id === 'xiangqi' ? 'Первыми ходят красные.' : `Первым ходит ${game.variant.sides.w}.`}</div>
+      )}
       <table>
         <tbody>
           {rows.filter(Boolean).map((r) => (

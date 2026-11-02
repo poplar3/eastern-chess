@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Evaluator, gameAtPly, HINT_DEPTH, LIVE_DEPTH, MULTIPV, type MoveReview } from './analysis/evaluator';
 import { cpForCho, winPercent } from './analysis/quality';
-import { END_REASON_RU, Game } from './core/game';
-import { findGeneral, isPass, legalMoves, opposite, setupName, startFenWithSetups, uciToMove, type Move } from './core/rules';
+import { endReasonText, Game } from './core/game';
+import { setupName, startFenWithSetups } from './core/rules';
+import { isPass, opposite, type GameId, type Move } from './core/types';
+import { GAME_IDS, getVariant, VARIANTS } from './core/variants';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
 import { loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig } from './settings';
 import { AiPanel, ARROW_COLORS, REPLY_COLOR, type EngineStatus, type ShownLines } from './ui/AiPanel';
@@ -15,7 +17,7 @@ import { TrainingView } from './ui/TrainingView';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
 import { ScorePanel } from './ui/ScorePanel';
-import { SIDE_NAMES } from './ui/pieces';
+import { useMoveInput } from './ui/moveInput';
 import './App.css';
 
 /** Непрерывный анализ: варианты показываются не мельче этой глубины и не чаще, чем раз в столько мс. */
@@ -23,7 +25,8 @@ const ANALYSIS_MIN_DEPTH = 10;
 const ANALYSIS_THROTTLE_MS = 800;
 
 function newGame(c: GameConfig) {
-  return new Game(startFenWithSetups(c.choSetup, c.hanSetup));
+  const v = getVariant(c.variant);
+  return v.id === 'janggi' ? new Game(startFenWithSetups(c.choSetup, c.hanSetup), v) : new Game(undefined, v);
 }
 
 /** Для разработки и тестов: ?fen=… открывает партию двух игроков с заданной позиции. */
@@ -35,14 +38,16 @@ const DEV_BOT = DEV_PARAMS?.get('bot') as 'w' | 'b' | null;
 export default function App() {
   const [config, setConfig] = useState<GameConfig>(() => (DEV_FEN ? { ...loadConfig(), mode: DEV_BOT ? 'bot' : 'human', humanColor: DEV_BOT === 'w' ? 'b' : 'w' } : loadConfig()));
   const [prefs, setPrefs] = useState(loadPrefs);
-  const gameRef = useRef<Game>(DEV_FEN ? new Game(DEV_FEN) : newGame(config));
+  const gameRef = useRef<Game>(DEV_FEN ? new Game(DEV_FEN, getVariant(config.variant)) : newGame(config));
   /** Партия начата с обычной расстановки (а не с позиции из задачи или ?fen=). */
   const [fromSetups, setFromSetups] = useState(!DEV_FEN);
   const [version, setVersion] = useState(0);
   const bump = () => setVersion((v) => v + 1);
   const game = gameRef.current;
+  const variant = game.variant;
+  /** Игра, предложенная в диалоге новой партии (при переключении игры в заголовке). */
+  const [dialogVariant, setDialogVariant] = useState<GameId | null>(null);
 
-  const [selected, setSelected] = useState<number | null>(null);
   const [flipped, setFlipped] = useState(config.mode === 'bot' && config.humanColor === 'b');
   const [showNewGame, setShowNewGame] = useState(!DEV_FEN);
   const [showRules, setShowRules] = useState(false);
@@ -110,11 +115,13 @@ export default function App() {
       const moves = g.uciMoves;
       const posFen = g.fen;
       const turn = g.turn;
+      const engineVariant = g.variant.engine;
       if (config.mode === 'bot' && g.turn !== config.humanColor) {
         const level = BOT_LEVELS.find((l) => l.id === config.level) ?? BOT_LEVELS[0];
         setThinking('bot');
         const startedAt = Date.now();
         const r = await engine.search({
+          variant: engineVariant,
           fen,
           moves,
           movetime: level.movetime,
@@ -149,11 +156,12 @@ export default function App() {
           pending = null;
         };
         void engine.search({
+          variant: engineVariant,
           fen,
           moves,
           infinite: true,
           multipv: MULTIPV,
-          expectedLines: Math.min(MULTIPV, legalMoves(g.position).length),
+          expectedLines: Math.min(MULTIPV, g.legalMoves().length),
           threads: analysisThreads(),
           onDepth: (ls) => {
             if (my !== token.current || (ls[0]?.depth ?? 0) < ANALYSIS_MIN_DEPTH) return;
@@ -223,28 +231,23 @@ export default function App() {
   const play = (m: Move) => {
     if (!game.isLegal(m)) return;
     game.play(m);
-    setSelected(null);
     setViewPly(null);
     bump();
   };
+
+  const input = useMoveInput(game, humanCanMove, play, config.pieceStyle);
 
   const onSquareClick = (s: number) => {
     if (viewing) {
       setViewPly(null);
       return;
     }
-    if (!humanCanMove) return;
-    const p = game.position.board[s];
-    if (selected !== null) {
-      const m = game.legalMoves().find((x) => x.from === selected && x.to === s && !isPass(x));
-      if (m) return play(m);
-    }
-    if (p && (p === p.toUpperCase() ? 'w' : 'b') === game.turn) setSelected(s === selected ? null : s);
-    else setSelected(null);
+    input.onSquareClick(s);
   };
 
   const pass = () => {
-    const g = findGeneral(game.position.board, game.turn);
+    const g = variant.kingSquare(game.position.board, game.turn);
+    input.clear();
     play({ from: g, to: g });
   };
 
@@ -260,7 +263,7 @@ export default function App() {
       while (game.history.length && game.turn !== config.humanColor) game.undo();
     } else game.undo();
     dropReviewsAfter(game.history.length);
-    setSelected(null);
+    input.clear();
     setViewPly(null);
     setResultClosed(false);
     bump();
@@ -271,12 +274,13 @@ export default function App() {
     engine.stop();
     if (!fen) saveConfig(c);
     setConfig(c);
-    gameRef.current = fen ? new Game(fen) : newGame(c);
-    setFromSetups(!fen);
+    gameRef.current = fen ? new Game(fen, getVariant(c.variant)) : newGame(c);
+    setFromSetups(!fen && c.variant === 'janggi');
     setView('game');
     setFlipped(c.mode === 'bot' && c.humanColor === 'b');
-    setSelected(null);
+    input.clear();
     setShowNewGame(false);
+    setDialogVariant(null);
     setResultClosed(false);
     setLines(null);
     setReviews({});
@@ -329,14 +333,14 @@ export default function App() {
   const shownPly = viewPly ?? n;
   const shownGame = viewing ? gameAtPly(game, shownPly) : game;
   const shownEntry = shownPly > 0 ? game.history[shownPly - 1] : null;
-  const targets = selected !== null && !viewing ? game.legalMoves().filter((m) => m.from === selected) : [];
+  const targets = !viewing ? input.targets : [];
   const shownResult = shownGame.result();
   // Подсвечиваем генерала под шахом, в том числе получившего мат
   const checkSquare =
-    (!shownResult || shownResult.reason === 'checkmate') && shownGame.inCheck()
-      ? findGeneral(shownGame.position.board, shownGame.turn)
+    (!shownResult || shownResult.reason === 'checkmate' || shownResult.reason === 'pawn-drop-mate') && shownGame.inCheck()
+      ? variant.kingSquare(shownGame.position.board, shownGame.turn)
       : null;
-  const canPass = humanCanMove && game.legalMoves().some(isPass);
+  const canPass = variant.hasPass && humanCanMove && game.legalMoves().some(isPass);
 
   const shownLines = !viewing && lines && lines.fen === game.fen ? lines : null;
   let arrows: Arrow[] = [];
@@ -345,20 +349,20 @@ export default function App() {
       .filter((l) => l.pv.length)
       .slice(0, 3)
       .map((l, i) => {
-        const m = uciToMove(l.pv[0]);
-        return { from: m.from, to: m.to, color: ARROW_COLORS[i], label: String(i + 1), main: i === 0 };
+        const m = variant.uciToMove(l.pv[0]);
+        return { from: m.from, to: m.to, drop: m.drop, side: shownLines.turn, color: ARROW_COLORS[i], label: String(i + 1), main: i === 0 };
       })
       .reverse();
     const reply = shownLines.lines[0]?.pv[1];
     if (reply) {
-      const m = uciToMove(reply);
-      arrows.unshift({ from: m.from, to: m.to, color: REPLY_COLOR, dashed: true });
+      const m = variant.uciToMove(reply);
+      arrows.unshift({ from: m.from, to: m.to, drop: m.drop, side: opposite(shownLines.turn), color: REPLY_COLOR, dashed: true });
     }
   } else if ((viewing || reviewOpen) && shownPly > 0) {
     const r = reviews[shownPly];
     if (r && r.quality !== 'best' && r.before.best) {
-      const m = uciToMove(r.before.best);
-      arrows = [{ from: m.from, to: m.to, color: '#1f8a4c', label: 'лучше', main: true }];
+      const m = variant.uciToMove(r.before.best);
+      arrows = [{ from: m.from, to: m.to, drop: m.drop, side: r.mover, color: '#1f8a4c', label: 'лучше', main: true }];
     }
   }
 
@@ -370,11 +374,33 @@ export default function App() {
   const evals = Array.from({ length: n + 1 }, (_, i) => evaluator.cached(game, i)?.cpCho);
   const lastReview = !viewing && n > 0 ? (reviews[n] ?? null) : null;
 
+  /** Игра, которую показывает текущий раздел: в партии — игра партии, в задачах и обучении — выбранная. */
+  const shownVariant = view === 'game' ? variant : getVariant(config.variant);
+  const chooseGame = (id: GameId) => {
+    if (view === 'game') {
+      if (id === variant.id) return;
+      setDialogVariant(id);
+      setShowNewGame(true);
+    } else {
+      const c = { ...config, variant: id };
+      setConfig(c);
+      saveConfig(c);
+    }
+  };
+
   return (
-    <div className="app">
+    <div className="app" data-game={shownVariant.id}>
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark">將</span> Чанги <span className="muted">корейские шахматы</span>
+          <span className={`brand-mark brand-${shownVariant.id}`}>{shownVariant.mark}</span> {shownVariant.name}{' '}
+          <span className="muted">{shownVariant.subtitle}</span>
+        </div>
+        <div className="game-switch segmented" role="tablist" aria-label="Игра">
+          {GAME_IDS.map((id) => (
+            <button key={id} role="tab" aria-selected={shownVariant.id === id} className={shownVariant.id === id ? 'active' : ''} onClick={() => chooseGame(id)}>
+              {VARIANTS[id].name}
+            </button>
+          ))}
         </div>
         <nav>
           <button className="btn" onClick={() => setShowNewGame(true)}>
@@ -399,17 +425,19 @@ export default function App() {
 
       {view === 'puzzles' && (
         <PuzzlesView
+          key={shownVariant.id}
+          variant={shownVariant}
           style={config.pieceStyle}
-          onPlayFrom={(fen, human) => startGame({ ...config, mode: 'bot', humanColor: human }, fen)}
+          onPlayFrom={(fen, human) => startGame({ ...config, variant: shownVariant.id, mode: 'bot', humanColor: human }, fen)}
         />
       )}
-      {view === 'training' && <TrainingView style={config.pieceStyle} />}
+      {view === 'training' && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
       {view === 'game' && (
       <main className="layout">
         <div className="board-area">
           <div
             className={`eval-bar${barCp === null ? ' empty' : ''}`}
-            title={barCp === null ? 'Включите анализ или оценку ходов' : formatScore({ cp: barCp })}
+            title={barCp === null ? 'Включите анализ или оценку ходов' : formatScore({ cp: barCp }, variant.sides)}
           >
             <div className="eval-han" style={{ height: `${100 - (barCp === null ? 50 : winPercent(barCp))}%` }} />
           </div>
@@ -427,13 +455,19 @@ export default function App() {
                 board={shownGame.position.board}
                 style={config.pieceStyle}
                 flipped={flipped}
-                selected={viewing ? null : selected}
+                selected={viewing ? null : input.selected}
                 targets={targets}
                 lastMove={shownEntry ? shownEntry.move : null}
                 checkSquare={checkSquare}
                 arrows={arrows}
                 onSquareClick={onSquareClick}
+                variant={variant}
+                hands={shownGame.position.hands}
+                selectedDrop={viewing ? null : input.selectedDrop}
+                turn={shownGame.turn}
+                onHandClick={humanCanMove ? input.onHandClick : undefined}
               />
+              {input.dialog}
             </div>
           </div>
         </div>
@@ -450,9 +484,11 @@ export default function App() {
           )}
 
           <div className="panel controls">
-            <button className="btn" onClick={pass} disabled={!canPass} title="Пропустить ход (нельзя под шахом)">
-              Пропустить ход
-            </button>
+            {variant.hasPass && (
+              <button className="btn" onClick={pass} disabled={!canPass} title="Пропустить ход (нельзя под шахом)">
+                Пропустить ход
+              </button>
+            )}
             <button className="btn" onClick={undo} disabled={n === 0}>
               Отменить ход
             </button>
@@ -508,9 +544,21 @@ export default function App() {
       )}
 
       {showNewGame && (
-        <NewGameDialog initial={config} onStart={startGame} onClose={n || version > 0 ? () => setShowNewGame(false) : undefined} />
+        <NewGameDialog
+          key={dialogVariant ?? 'current'}
+          initial={{ ...config, variant: dialogVariant ?? (view === 'game' ? variant.id : config.variant) }}
+          onStart={startGame}
+          onClose={
+            n || version > 0
+              ? () => {
+                  setShowNewGame(false);
+                  setDialogVariant(null);
+                }
+              : undefined
+          }
+        />
       )}
-      {showRules && <RulesDialog style={config.pieceStyle} onClose={() => setShowRules(false)} />}
+      {showRules && <RulesDialog variant={shownVariant} style={config.pieceStyle} onClose={() => setShowRules(false)} />}
       {result && !resultClosed && view === 'game' && (
         <Modal
           title="Партия окончена"
@@ -529,14 +577,24 @@ export default function App() {
             </>
           }
         >
-          <p className="result-line">
-            Победа: <b className={result.winner === 'w' ? 'cho' : 'han'}>{SIDE_NAMES[result.winner]}</b>
-            {result.reason === 'resign' && ` — ${SIDE_NAMES[opposite(result.winner)]} сдался`}
-          </p>
-          <p>{END_REASON_RU[result.reason]}</p>
+          {result.winner ? (
+            <p className="result-line">
+              Победа: <b className={result.winner === 'w' ? 'cho' : 'han'}>{variant.sides[result.winner]}</b>
+              {result.reason === 'resign' && ` — ${variant.sides[opposite(result.winner)]} ${variant.id === 'xiangqi' ? 'сдались' : 'сдался'}`}
+            </p>
+          ) : (
+            <p className="result-line">
+              <b>Ничья</b>
+            </p>
+          )}
+          <p>{endReasonText(game, result)}</p>
           {config.mode === 'bot' && (
             <p className="muted">
-              {result.winner === config.humanColor ? 'Поздравляем!' : 'Попробуйте ещё раз или выберите уровень полегче.'}
+              {result.winner === config.humanColor
+                ? 'Поздравляем!'
+                : result.winner
+                  ? 'Попробуйте ещё раз или выберите уровень полегче.'
+                  : 'Неплохо! Попробуйте выиграть в следующий раз.'}
             </p>
           )}
         </Modal>

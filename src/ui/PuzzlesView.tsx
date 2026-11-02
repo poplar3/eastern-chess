@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Game } from '../core/game';
-import { formatMove } from '../core/notation';
-import { findGeneral, isPass, moveToUci, squareName, typeOf, uciToMove, type Move } from '../core/rules';
-import { allPuzzles, CONCEPTS, isClassic, LEVELS, loadSolved, saveSolved, type ConceptId, type Puzzle } from '../puzzles';
+import { isPass, type Move, type Variant } from '../core/types';
+import { allPuzzles, conceptsFor, isClassic, levelsFor, loadSolved, saveSolved, type ConceptId, type Puzzle } from '../puzzles';
 import { Board, type Arrow } from './Board';
-import { PIECE_NAMES, SIDE_NAMES, type PieceStyle } from './pieces';
+import { useMoveInput } from './moveInput';
+import type { PieceStyle } from './pieces';
 
 interface Props {
+  variant: Variant;
   style: PieceStyle;
   /** Начать обычную партию с компьютером из этой позиции. */
   onPlayFrom: (fen: string, human: 'w' | 'b') => void;
@@ -14,8 +15,10 @@ interface Props {
 
 type Status = 'play' | 'wrong' | 'reply' | 'solved' | 'shown' | 'free';
 
-export function PuzzlesView({ style, onPlayFrom }: Props) {
-  const puzzles = useMemo(() => allPuzzles(), []);
+export function PuzzlesView({ variant, style, onPlayFrom }: Props) {
+  const puzzles = useMemo(() => allPuzzles(variant.id), [variant.id]);
+  const levels = levelsFor(variant.id);
+  const CONCEPTS = conceptsFor(variant.id);
   const [solved, setSolved] = useState(loadSolved);
   const [current, setCurrent] = useState<Puzzle | null>(null);
   const [level, setLevel] = useState<number | null>(null);
@@ -38,6 +41,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
         key={current.id}
         puzzle={current}
         number={idx + 1}
+        variant={variant}
         style={style}
         onSolved={(clean) => markSolved(current.id, clean)}
         onBack={() => setCurrent(null)}
@@ -63,7 +67,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
           <h2>Задачи</h2>
           <div className="muted">
             Решено {solvedCount} из {puzzles.length}. Задачи упорядочены от простых к сложным; уровни соответствуют
-            корейским любительским разрядам.
+            {variant.id === 'janggi' ? ' корейским любительским разрядам.' : variant.id === 'shogi' ? ' любительским разрядам сёги (кю и дан).' : ' силе игры от новичка до сильного любителя.'}
           </div>
         </div>
         <div className="puzzle-filters">
@@ -71,7 +75,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
             <button className={level === null ? 'active' : ''} onClick={() => setLevel(null)}>
               Все
             </button>
-            {LEVELS.map((l) => (
+            {levels.map((l) => (
               <button key={l.n} className={level === l.n ? 'active' : ''} onClick={() => setLevel(l.n)} title={l.rank}>
                 {l.ru}
               </button>
@@ -85,11 +89,13 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
               </option>
             ))}
           </select>
-          <select value={origin} onChange={(e) => setOrigin(e.target.value as '' | 'classic' | 'own')} aria-label="Источник">
-            <option value="">Все источники</option>
-            <option value="classic">Корейские задачи (бакбо)</option>
-            <option value="own">Составленные приложением</option>
-          </select>
+          {puzzles.some(isClassic) && (
+            <select value={origin} onChange={(e) => setOrigin(e.target.value as '' | 'classic' | 'own')} aria-label="Источник">
+              <option value="">Все источники</option>
+              <option value="classic">Корейские задачи (бакбо)</option>
+              <option value="own">Составленные приложением</option>
+            </select>
+          )}
         </div>
       </div>
       {concept && <div className="panel concept-about"><b>{CONCEPTS[concept].ru}.</b> {CONCEPTS[concept].about}</div>}
@@ -101,11 +107,11 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
             <b>{p.title}</b>
             <span className={`lvl lvl-${p.level.n}`}>{p.level.ru}</span>
             <span className="muted small">{p.concepts.map((c) => CONCEPTS[c].ru).join(', ')}</span>
-            <span className="muted small">Ход {p.solver === 'w' ? 'Чо' : 'Хана'}</span>
+            <span className="muted small">Ход {variant.sidesGen[p.solver]}</span>
             {isClassic(p) && <span className="muted small">Бакбо, № {p.number}</span>}
           </button>
         ))}
-        {list.length === 0 && <div className="muted">Нет задач с такими условиями.</div>}
+        {list.length === 0 && <div className="muted">{puzzles.length ? 'Нет задач с такими условиями.' : 'Задач для этой игры пока нет.'}</div>}
       </div>
     </div>
   );
@@ -114,6 +120,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
 interface SolverProps {
   puzzle: Puzzle;
   number: number;
+  variant: Variant;
   style: PieceStyle;
   onSolved: (clean: boolean) => void;
   onBack: () => void;
@@ -121,13 +128,13 @@ interface SolverProps {
   onPlayFrom: (fen: string, human: 'w' | 'b') => void;
 }
 
-function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayFrom }: SolverProps) {
+function PuzzleSolver({ puzzle, number, variant, style, onSolved, onBack, onNext, onPlayFrom }: SolverProps) {
   // Партия мутируется на месте; bump() перерисовывает, setGame() подменяет её целиком.
-  const [game, setGame] = useState(() => new Game(puzzle.fen));
+  const CONCEPTS = conceptsFor(variant.id);
+  const [game, setGame] = useState(() => new Game(puzzle.fen, variant));
   const [, setVersion] = useState(0);
   const bump = () => setVersion((v) => v + 1);
   const [status, setStatus] = useState<Status>('play');
-  const [selected, setSelected] = useState<number | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [errors, setErrors] = useState(0);
   const [usedHelp, setUsedHelp] = useState(false);
@@ -144,10 +151,10 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
 
   const reset = () => {
     timers.current.forEach(clearTimeout);
-    setGame(new Game(puzzle.fen));
+    setGame(new Game(puzzle.fen, variant));
     setLine(puzzle.line);
     setStatus('play');
-    setSelected(null);
+    input.clear();
     setHintLevel(0);
     setWrongMove(null);
     bump();
@@ -157,14 +164,14 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
     const g = game;
     if (status === 'free') {
       g.play(m);
-      setSelected(null);
       bump();
       return;
     }
+    const uci = variant.moveToUci(m);
     let cur = line;
-    let ok = moveToUci(m) === cur[step];
+    let ok = uci === cur[step];
     // Равноценный другой ход: дальше решение идёт по его продолжению.
-    const alt = ok ? undefined : puzzle.alts?.find((a) => a.at === step && a.line[0] === moveToUci(m));
+    const alt = ok ? undefined : puzzle.alts?.find((a) => a.at === step && a.line[0] === uci);
     if (alt) {
       cur = [...line.slice(0, step), ...alt.line];
       setLine(cur);
@@ -172,12 +179,11 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
     }
     // На последнем ходу засчитывается любой мат.
     if (!ok && puzzle.goal === 'mate' && step === cur.length - 1) {
-      const probe = new Game(puzzle.fen);
+      const probe = new Game(puzzle.fen, variant);
       for (const u of g.uciMoves) probe.playUci(u);
       probe.play(m);
       ok = probe.result()?.reason === 'checkmate';
     }
-    setSelected(null);
     if (!ok) {
       setErrors((e) => e + 1);
       setWrongMove(m);
@@ -201,25 +207,16 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
     bump();
   };
 
-  const onSquareClick = (s: number) => {
-    if (!(solving || status === 'free')) return;
-    const p = game.position.board[s];
-    if (selected !== null) {
-      const m = game.legalMoves().find((x) => x.from === selected && x.to === s && !isPass(x));
-      if (m) return tryMove(m);
-    }
-    if (p && (p === p.toUpperCase() ? 'w' : 'b') === game.turn) setSelected(s === selected ? null : s);
-    else setSelected(null);
-  };
+  const input = useMoveInput(game, solving || status === 'free', tryMove, style);
 
   const showSolution = () => {
     timers.current.forEach(clearTimeout);
-    const g = new Game(puzzle.fen);
+    const g = new Game(puzzle.fen, variant);
     setGame(g);
     setLine(puzzle.line);
     setStatus('shown');
     setUsedHelp(true);
-    setSelected(null);
+    input.clear();
     setWrongMove(null);
     bump();
     puzzle.line.forEach((u, i) =>
@@ -232,8 +229,8 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
 
   /** Свободная игра: с текущей позиции, а если партия уже закончилась — с позиции задачи. */
   const startFree = () => {
-    if (game.result()) setGame(new Game(puzzle.fen));
-    setSelected(null);
+    if (game.result()) setGame(new Game(puzzle.fen, variant));
+    input.clear();
     setStatus('free');
     bump();
   };
@@ -245,28 +242,32 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
 
   // Подсказки: для первого хода — приём, фигура, ход; для следующих — фигура и ход.
   const expectedUci = step >= 0 ? line[step] : undefined;
-  const expectedMove = expectedUci ? uciToMove(expectedUci) : null;
+  const expectedMove = expectedUci ? variant.uciToMove(expectedUci) : null;
   const hintTexts: string[] = [];
   if (expectedMove && solving) {
     if (step === 0) hintTexts.push(...puzzle.hints.slice(0, hintLevel));
     else {
-      const piece = game.position.board[expectedMove.from]!;
-      const probe = new Game(game.fen);
+      const probe = new Game(game.fen, variant);
       const h = probe.play(expectedMove);
-      if (hintLevel >= 1) hintTexts.push(`Ходит ${PIECE_NAMES[typeOf(piece)].ru.toLowerCase()} с ${squareName(expectedMove.from)}.`);
-      if (hintLevel >= 2) hintTexts.push(`Ход: ${formatMove(h)}.`);
+      const name = variant.pieceInfo(h.piece).ru.toLowerCase();
+      if (hintLevel >= 1)
+        hintTexts.push(expectedMove.from < 0 ? `Поставьте из руки: ${name}.` : `Ходит ${name} с ${variant.squareName(expectedMove.from)}.`);
+      if (hintLevel >= 2) hintTexts.push(`Ход: ${variant.formatMove(h)}.`);
     }
   }
   const maxHints = step === 0 ? 3 : 2;
-  const hintSquare = solving && expectedMove && (step === 0 ? hintLevel >= 2 : hintLevel >= 1) ? expectedMove.from : null;
+  const hintSquare = solving && expectedMove && expectedMove.from >= 0 && (step === 0 ? hintLevel >= 2 : hintLevel >= 1) ? expectedMove.from : null;
   const arrows: Arrow[] =
-    solving && expectedMove && hintLevel >= maxHints ? [{ from: expectedMove.from, to: expectedMove.to, color: '#1f8a4c', main: true }] : [];
-  if (wrongMove && status === 'wrong') arrows.push({ from: wrongMove.from, to: wrongMove.to, color: '#7b8794', dashed: true });
+    solving && expectedMove && hintLevel >= maxHints
+      ? [{ from: expectedMove.from, to: expectedMove.to, drop: expectedMove.drop, side: game.turn, color: '#1f8a4c', main: true }]
+      : [];
+  if (wrongMove && status === 'wrong')
+    arrows.push({ from: wrongMove.from, to: wrongMove.to, drop: wrongMove.drop, side: game.turn, color: '#7b8794', dashed: true });
 
   const last = game.history[game.history.length - 1];
   const result = game.result();
-  const checkSquare = (!result || result.reason === 'checkmate') && game.inCheck() ? findGeneral(game.position.board, game.turn) : null;
-  const targets = selected !== null ? game.legalMoves().filter((m) => m.from === selected) : [];
+  const checkSquare = (!result || result.reason === 'checkmate') && game.inCheck() ? variant.kingSquare(game.position.board, game.turn) : null;
+  const targets = input.targets;
   const done = status === 'solved' || status === 'shown' || status === 'free';
   const animating = status === 'shown' && game.history.length < line.length;
 
@@ -279,13 +280,19 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
               board={game.position.board}
               style={style}
               flipped={puzzle.solver === 'b'}
-              selected={selected ?? hintSquare}
+              selected={input.selected ?? hintSquare}
               targets={targets}
               lastMove={last ? last.move : null}
               checkSquare={checkSquare}
               arrows={arrows}
-              onSquareClick={onSquareClick}
+              onSquareClick={input.onSquareClick}
+              variant={variant}
+              hands={game.position.hands}
+              selectedDrop={input.selectedDrop}
+              turn={game.turn}
+              onHandClick={solving || status === 'free' ? input.onHandClick : undefined}
             />
+            {input.dialog}
           </div>
         </div>
       </div>
@@ -313,7 +320,7 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
             ))}
           </div>
 
-          {status === 'play' && <div className="puzzle-status">Ваш ход: вы играете за {puzzle.solver === 'w' ? 'Чо' : 'Хана'}.</div>}
+          {status === 'play' && <div className="puzzle-status">Ваш ход: вы играете за {variant.sidesGen[puzzle.solver]}.</div>}
           {status === 'wrong' && <div className="alert check">Не тот ход. Попробуйте ещё раз или возьмите подсказку.</div>}
           {status === 'reply' && <div className="puzzle-status">Верно! Соперник отвечает…</div>}
           {status === 'solved' && (
@@ -324,7 +331,8 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
           {status === 'shown' && <div className="puzzle-status">{animating ? 'Показываю решение…' : 'Решение показано.'}</div>}
           {status === 'free' && (
             <div className="puzzle-status">
-              Свободная игра: ходите за обе стороны как угодно. {result && <b>Партия окончена: победа {SIDE_NAMES[result.winner]}.</b>}
+              Свободная игра: ходите за обе стороны как угодно.{' '}
+              {result && <b>Партия окончена: {result.winner ? `победа — ${variant.sides[result.winner]}` : 'ничья'}.</b>}
             </div>
           )}
 
@@ -415,12 +423,12 @@ function PuzzleSolver({ puzzle, number, style, onSolved, onBack, onNext, onPlayF
             </div>
           )}
         </div>
-        {status === 'free' && (
+        {status === 'free' && variant.hasPass && (
           <div className="panel controls">
             <button
               className="btn"
               onClick={() => {
-                const g = findGeneral(game.position.board, game.turn);
+                const g = variant.kingSquare(game.position.board, game.turn);
                 const m = { from: g, to: g };
                 if (game.isLegal(m)) tryMove(m);
               }}
