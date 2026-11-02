@@ -7,6 +7,8 @@ import {
   materialPoints,
   moveToUci,
   parseFen,
+  randomSetup,
+  SETUPS,
   startFenWithSetups,
   toFen,
 } from './rules';
@@ -21,6 +23,13 @@ describe('FEN', () => {
     // Хан смотрит с другой стороны: его левый край — вертикаль i
     expect(fen.split(' ')[0].split('/')[0]).toBe('rbna1abnr');
     expect(fen.split(' ')[0].split('/')[9]).toBe('RBNA1ANBR');
+  });
+});
+
+describe('расстановка компьютера', () => {
+  it('выбирает любую из четырёх расстановок', () => {
+    const got = new Set([0, 0.26, 0.51, 0.76, 0.999999].map((x) => randomSetup(() => x)));
+    expect([...got].sort()).toEqual(SETUPS.map((s) => s.id).sort());
   });
 });
 

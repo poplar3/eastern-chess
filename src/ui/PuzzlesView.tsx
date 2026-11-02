@@ -87,7 +87,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
           </select>
           <select value={origin} onChange={(e) => setOrigin(e.target.value as '' | 'classic' | 'own')} aria-label="Источник">
             <option value="">Все источники</option>
-            <option value="classic">Корейские задачи (박보장기)</option>
+            <option value="classic">Корейские задачи (бакбо)</option>
             <option value="own">Составленные приложением</option>
           </select>
         </div>
@@ -102,7 +102,7 @@ export function PuzzlesView({ style, onPlayFrom }: Props) {
             <span className={`lvl lvl-${p.level.n}`}>{p.level.ru}</span>
             <span className="muted small">{p.concepts.map((c) => CONCEPTS[c].ru).join(', ')}</span>
             <span className="muted small">Ход {p.solver === 'w' ? 'Чо' : 'Хана'}</span>
-            {isClassic(p) && <span className="muted small">박보장기, № {p.number}</span>}
+            {isClassic(p) && <span className="muted small">Бакбо, № {p.number}</span>}
           </button>
         ))}
         {list.length === 0 && <div className="muted">Нет задач с такими условиями.</div>}

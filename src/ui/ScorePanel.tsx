@@ -1,7 +1,7 @@
 import type { Game } from '../core/game';
 import { END_REASON_RU, MOVE_LIMIT_PLIES } from '../core/game';
 import { HAN_BONUS, materialPoints, opposite, pointsWinner, type Color } from '../core/rules';
-import { PieceIcon, SIDE_KO, SIDE_NAMES, type PieceStyle } from './pieces';
+import { PieceIcon, SIDE_NAMES, type PieceStyle } from './pieces';
 
 const fmt = (n: number) => n.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
 
@@ -21,10 +21,10 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
           <div key={c} className={`score-row ${c === 'w' ? 'cho' : 'han'}${game.turn === c && !result ? ' to-move' : ''}`}>
             <PieceIcon piece={c === 'w' ? 'K' : 'k'} style={style} size={30} />
             <div className="score-name">
-              {SIDE_NAMES[c]} <span className="muted">({SIDE_KO[c]})</span>
+              {SIDE_NAMES[c]}
               {game.turn === c && !result && <span className="turn-badge">ходит</span>}
             </div>
-            <div className="score-value" title={c === 'b' ? `включая ${fmt(HAN_BONUS)} очка компенсации (덤)` : undefined}>
+            <div className="score-value" title={c === 'b' ? `включая ${fmt(HAN_BONUS)} очка компенсации` : undefined}>
               {fmt(pts[c])}
             </div>
           </div>
@@ -35,25 +35,25 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
       </div>
       <div className="score-summary">
         По очкам ведёт <b className={leader === 'w' ? 'cho' : 'han'}>{SIDE_NAMES[leader]}</b> на {fmt(diff)}
-        <span className="muted"> (у Хана +1,5 덤)</span>
+        <span className="muted"> (у Хана +1,5 за второй ход)</span>
       </div>
 
       {result && (
         <div className={`alert game-over ${result.winner === 'w' ? 'cho' : 'han'}`} role="status">
-          <b>{result.reason === 'checkmate' ? 'Мат (외통)!' : 'Партия окончена.'}</b> Победа:{' '}
+          <b>{result.reason === 'checkmate' ? 'Мат!' : 'Партия окончена.'}</b> Победа:{' '}
           <b>{SIDE_NAMES[result.winner]}</b>.{result.reason !== 'checkmate' && <> {END_REASON_RU[result.reason]}.</>}
         </div>
       )}
       {!result && game.bikjang && (
         <div className="alert bikjang">
-          <b>Биджанг (빅장)!</b> Генералы смотрят друг на друга. {SIDE_NAMES[game.turn]} должен разорвать биджанг
+          <b>Биджанг!</b> Генералы смотрят друг на друга. {SIDE_NAMES[game.turn]} должен разорвать биджанг
           или пропустить ход — тогда партия закончится подсчётом очков, и победит{' '}
           <b>{SIDE_NAMES[leader]}</b>.
         </div>
       )}
       {!result && game.inCheck() && (
         <div className="alert check">
-          <b>Шах (장군)!</b> {SIDE_NAMES[game.turn]} должен защитить генерала.
+          <b>Шах!</b> {SIDE_NAMES[game.turn]} должен защитить генерала.
         </div>
       )}
 
