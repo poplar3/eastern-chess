@@ -5,7 +5,6 @@ export type PieceStyle = 'icons' | 'hanja';
 
 export const SIDE_COLORS: Record<Color, string> = { w: '#17694a', b: '#b3242a' };
 export const SIDE_NAMES: Record<Color, string> = { w: 'Чо', b: 'Хан' };
-export const SIDE_KO: Record<Color, string> = { w: '초', b: '한' };
 
 export const PIECE_NAMES: Record<PieceType, { ru: string; short: string; ko: string }> = {
   K: { ru: 'Генерал', short: 'Г', ko: '궁' },

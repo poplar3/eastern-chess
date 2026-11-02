@@ -107,17 +107,26 @@ export function toFen(pos: Position): string {
   return `${rows.join('/')} ${pos.turn} - - ${pos.halfmove} ${pos.fullmove}`;
 }
 
-// ---------- Расстановки (상차림) ----------
+// ---------- Расстановки слонов и коней ----------
 
 /** Порядок коня (N) и слона (B) на четырёх полях b, c, g, h — слева направо с точки зрения игрока. */
 export type Setup = 'NBNB' | 'NBBN' | 'BNNB' | 'BNBN';
 
-export const SETUPS: { id: Setup; ko: string; ru: string }[] = [
-  { id: 'NBBN', ko: '마상상마', ru: 'Внутренние слоны (конь-слон-слон-конь)' },
-  { id: 'BNNB', ko: '상마마상', ru: 'Внешние слоны (слон-конь-конь-слон)' },
-  { id: 'NBNB', ko: '마상마상', ru: 'Левый конь (конь-слон-конь-слон)' },
-  { id: 'BNBN', ko: '상마상마', ru: 'Правый слон (слон-конь-слон-конь)' },
+export const SETUPS: { id: Setup; name: string; order: string }[] = [
+  { id: 'NBBN', name: 'Слоны внутри', order: 'конь-слон-слон-конь' },
+  { id: 'BNNB', name: 'Слоны снаружи', order: 'слон-конь-конь-слон' },
+  { id: 'BNBN', name: 'Слон слева', order: 'слон-конь-слон-конь' },
+  { id: 'NBNB', name: 'Слон справа', order: 'конь-слон-конь-слон' },
 ];
+
+export function setupName(id: Setup): string {
+  return SETUPS.find((s) => s.id === id)?.name ?? id;
+}
+
+/** Расстановка, которую компьютер выбирает себе сам. */
+export function randomSetup(rand: () => number = Math.random): Setup {
+  return SETUPS[Math.min(SETUPS.length - 1, Math.floor(rand() * SETUPS.length))].id;
+}
 
 export function startFenWithSetups(cho: Setup, han: Setup): string {
   const pos = parseFen(START_FEN);

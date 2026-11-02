@@ -223,7 +223,7 @@ export function getEngine(): Engine {
 export interface BotLevel {
   id: number;
   name: string;
-  /** Корейский разряд (급 — кю, 단 — дан). */
+  /** Корейский разряд (кып — ученический, дан — мастерский). */
   rank: string;
   elo?: number;
   skill?: number;
@@ -238,15 +238,15 @@ export interface BotLevel {
  * корейские разряды указаны по соответствию рейтинга.
  */
 export const BOT_LEVELS: BotLevel[] = [
-  { id: 1, name: 'Новичок', rank: '18 급', skill: -10, movetime: 200 },
-  { id: 2, name: 'Начинающий', rank: '15 급', elo: 750, movetime: 300 },
-  { id: 3, name: 'Любитель', rank: '10 급', elo: 1000, movetime: 400 },
-  { id: 4, name: 'Клубный игрок', rank: '5 급', elo: 1250, movetime: 500 },
-  { id: 5, name: 'Сильный любитель', rank: '1 급', elo: 1500, movetime: 700 },
-  { id: 6, name: 'Кандидат', rank: '1 단', elo: 1800, movetime: 1000 },
-  { id: 7, name: 'Мастер', rank: '3 단', elo: 2100, movetime: 1500 },
-  { id: 8, name: 'Эксперт', rank: '5 단', elo: 2400, movetime: 2000 },
-  { id: 9, name: 'Профессионал', rank: '7 단', elo: 2700, movetime: 3000 },
+  { id: 1, name: 'Новичок', rank: '18 кып', skill: -10, movetime: 200 },
+  { id: 2, name: 'Начинающий', rank: '15 кып', elo: 750, movetime: 300 },
+  { id: 3, name: 'Любитель', rank: '10 кып', elo: 1000, movetime: 400 },
+  { id: 4, name: 'Клубный игрок', rank: '5 кып', elo: 1250, movetime: 500 },
+  { id: 5, name: 'Сильный любитель', rank: '1 кып', elo: 1500, movetime: 700 },
+  { id: 6, name: 'Кандидат', rank: '1 дан', elo: 1800, movetime: 1000 },
+  { id: 7, name: 'Мастер', rank: '3 дан', elo: 2100, movetime: 1500 },
+  { id: 8, name: 'Эксперт', rank: '5 дан', elo: 2400, movetime: 2000 },
+  { id: 9, name: 'Профессионал', rank: '7 дан', elo: 2700, movetime: 3000 },
   { id: 10, name: 'Максимум', rank: 'без ограничений', movetime: 5000, allThreads: true },
 ];
 

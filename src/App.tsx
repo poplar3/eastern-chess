@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Evaluator, gameAtPly, HINT_DEPTH, LIVE_DEPTH, MULTIPV, type MoveReview } from './analysis/evaluator';
 import { cpForCho, winPercent } from './analysis/quality';
 import { END_REASON_RU, Game } from './core/game';
-import { findGeneral, isPass, legalMoves, opposite, startFenWithSetups, uciToMove, type Move } from './core/rules';
+import { findGeneral, isPass, legalMoves, opposite, setupName, startFenWithSetups, uciToMove, type Move } from './core/rules';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
 import { loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig } from './settings';
 import { AiPanel, ARROW_COLORS, REPLY_COLOR, type EngineStatus, type ShownLines } from './ui/AiPanel';
@@ -36,6 +36,8 @@ export default function App() {
   const [config, setConfig] = useState<GameConfig>(() => (DEV_FEN ? { ...loadConfig(), mode: DEV_BOT ? 'bot' : 'human', humanColor: DEV_BOT === 'w' ? 'b' : 'w' } : loadConfig()));
   const [prefs, setPrefs] = useState(loadPrefs);
   const gameRef = useRef<Game>(DEV_FEN ? new Game(DEV_FEN) : newGame(config));
+  /** Партия начата с обычной расстановки (а не с позиции из задачи или ?fen=). */
+  const [fromSetups, setFromSetups] = useState(!DEV_FEN);
   const [version, setVersion] = useState(0);
   const bump = () => setVersion((v) => v + 1);
   const game = gameRef.current;
@@ -270,6 +272,7 @@ export default function App() {
     if (!fen) saveConfig(c);
     setConfig(c);
     gameRef.current = fen ? new Game(fen) : newGame(c);
+    setFromSetups(!fen);
     setView('game');
     setFlipped(c.mode === 'bot' && c.humanColor === 'b');
     setSelected(null);
@@ -437,6 +440,14 @@ export default function App() {
 
         <aside className="side">
           <ScorePanel game={shownGame} style={config.pieceStyle} />
+
+          {fromSetups && (
+            <div className="panel setups-line">
+              <b>Расстановки:</b> Чо — {setupName(config.choSetup)}
+              {config.mode === 'bot' && config.humanColor === 'b' && ' (выбрал компьютер)'}; Хан — {setupName(config.hanSetup)}
+              {config.mode === 'bot' && config.humanColor === 'w' && ' (выбрал компьютер)'}.
+            </div>
+          )}
 
           <div className="panel controls">
             <button className="btn" onClick={pass} disabled={!canPass} title="Пропустить ход (нельзя под шахом)">

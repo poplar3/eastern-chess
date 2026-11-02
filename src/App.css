@@ -485,6 +485,17 @@
 .setup-name {
   font-size: 14px;
 }
+.setup-order {
+  font-size: 11px;
+  color: var(--muted);
+}
+.field > label .piece-icon,
+.field > label svg {
+  vertical-align: middle;
+}
+.setups-line {
+  font-size: 13px;
+}
 
 .rules section {
   margin-bottom: 14px;

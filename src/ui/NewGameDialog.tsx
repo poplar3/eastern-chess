@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { SETUPS, type Color, type Setup } from '../core/rules';
+import { useState, type ReactNode } from 'react';
+import { SETUPS, randomSetup, setupName, type Color, type Setup } from '../core/rules';
 import { BOT_LEVELS } from '../engine/engine';
 import type { GameConfig } from '../settings';
 import { Modal } from './Modal';
@@ -11,19 +11,22 @@ interface Props {
   onClose?: () => void;
 }
 
+const setupKey = (col: Color): 'choSetup' | 'hanSetup' => (col === 'w' ? 'choSetup' : 'hanSetup');
+
 function SetupPicker({ color, value, style, onChange }: { color: Color; value: Setup; style: PieceStyle; onChange: (s: Setup) => void }) {
   return (
     <div className="setup-picker">
       {SETUPS.map((s) => {
         const pieces = s.id.split('').map((t) => (color === 'w' ? t : t.toLowerCase()));
         return (
-          <button key={s.id} className={`setup-option${value === s.id ? ' active' : ''}`} onClick={() => onChange(s.id)} title={s.ru}>
+          <button key={s.id} className={`setup-option${value === s.id ? ' active' : ''}`} onClick={() => onChange(s.id)} title={s.order}>
             <span className="setup-pieces">
               {pieces.slice(0, 2).map((p, i) => <PieceIcon key={i} piece={p} style={style} size={26} />)}
               <span className="setup-gap">…</span>
               {pieces.slice(2).map((p, i) => <PieceIcon key={i + 2} piece={p} style={style} size={26} />)}
             </span>
-            <span className="setup-name">{s.ko}</span>
+            <span className="setup-name">{s.name}</span>
+            <span className="setup-order">{s.order}</span>
           </button>
         );
       })}
@@ -31,28 +34,33 @@ function SetupPicker({ color, value, style, onChange }: { color: Color; value: S
   );
 }
 
+/**
+ * Шаги диалога. В партии с компьютером человек выбирает только свою расстановку,
+ * компьютер — свою сам. В партии двух игроков каждый выбирает за себя по очереди:
+ * по правилам сначала Хан, затем Чо.
+ */
+type Step = 'settings' | 'b' | 'w';
+
 export function NewGameDialog({ initial, onStart, onClose }: Props) {
   const [c, setC] = useState<GameConfig>(initial);
+  const [step, setStep] = useState<Step>('settings');
   const set = <K extends keyof GameConfig>(k: K, v: GameConfig[K]) => setC((x) => ({ ...x, [k]: v }));
 
-  return (
-    <Modal
-      title="Новая партия"
-      onClose={onClose}
-      wide
-      footer={
-        <>
-          {onClose && (
-            <button className="btn" onClick={onClose}>
-              Отмена
-            </button>
-          )}
-          <button className="btn primary" onClick={() => onStart(c)}>
-            Начать партию
-          </button>
-        </>
-      }
-    >
+  const startVsBot = () => {
+    const botColor = c.humanColor === 'w' ? 'b' : 'w';
+    onStart({ ...c, [setupKey(botColor)]: randomSetup() });
+  };
+
+  let body: ReactNode;
+  let footer: ReactNode;
+  const cancel = onClose && (
+    <button className="btn" onClick={onClose}>
+      Отмена
+    </button>
+  );
+
+  if (step === 'settings') {
+    body = (
       <div className="form-grid">
         <div className="field">
           <label>Вид фигур</label>
@@ -80,7 +88,7 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
           </div>
         </div>
 
-        {c.mode === 'bot' && (
+        {c.mode === 'bot' ? (
           <>
             <div className="field">
               <label>Вы играете за</label>
@@ -104,23 +112,83 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
                 ))}
               </select>
               <p className="hint">
-                Уровни идут от новичка (18 급) до полной силы движка. Корейские разряды: 급 (кып) — ученические, от
-                18 до 1; 단 (дан) — мастерские. Elo приблизительный.
+                Уровни идут от новичка (18 кып) до полной силы движка. Корейские разряды: кып — ученические, от 18 до
+                1; дан — мастерские. Elo приблизительный.
+              </p>
+            </div>
+            <div className="field">
+              <label>Ваша расстановка слонов и коней</label>
+              <SetupPicker
+                color={c.humanColor}
+                value={c[setupKey(c.humanColor)]}
+                style={c.pieceStyle}
+                onChange={(s) => set(setupKey(c.humanColor), s)}
+              />
+              <p className="hint">
+                Слева направо — так, как вы видите свою первую линию. Компьютер выберет свою расстановку сам.
               </p>
             </div>
           </>
+        ) : (
+          <p className="hint">
+            На следующем шаге каждый игрок сам выберет, как поставить своих слонов и коней: по правилам сначала Хан,
+            затем Чо.
+          </p>
         )}
-
+      </div>
+    );
+    footer = (
+      <>
+        {cancel}
+        {c.mode === 'bot' ? (
+          <button className="btn primary" onClick={startVsBot}>
+            Начать партию
+          </button>
+        ) : (
+          <button className="btn primary" onClick={() => setStep('b')}>
+            Далее
+          </button>
+        )}
+      </>
+    );
+  } else {
+    const col = step;
+    body = (
+      <div className="form-grid">
         <div className="field">
-          <label>Расстановка Чо (상차림)</label>
-          <SetupPicker color="w" value={c.choSetup} style={c.pieceStyle} onChange={(s) => set('choSetup', s)} />
-        </div>
-        <div className="field">
-          <label>Расстановка Хана</label>
-          <SetupPicker color="b" value={c.hanSetup} style={c.pieceStyle} onChange={(s) => set('hanSetup', s)} />
-          <p className="hint">Слева направо — так, как игрок видит свою первую линию.</p>
+          <label>
+            <PieceIcon piece={col === 'w' ? 'K' : 'k'} style={c.pieceStyle} size={26} /> {SIDE_NAMES[col]} выбирает
+            расстановку слонов и коней
+          </label>
+          <SetupPicker color={col} value={c[setupKey(col)]} style={c.pieceStyle} onChange={(s) => set(setupKey(col), s)} />
+          <p className="hint">
+            Слева направо — так, как игрок видит свою первую линию.
+            {col === 'w' && ` Хан выбрал: ${setupName(c.hanSetup)}.`}
+          </p>
         </div>
       </div>
+    );
+    footer = (
+      <>
+        <button className="btn" onClick={() => setStep(col === 'b' ? 'settings' : 'b')}>
+          Назад
+        </button>
+        {col === 'b' ? (
+          <button className="btn primary" onClick={() => setStep('w')}>
+            Далее
+          </button>
+        ) : (
+          <button className="btn primary" onClick={() => onStart(c)}>
+            Начать партию
+          </button>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <Modal title="Новая партия" onClose={onClose} wide footer={footer}>
+      {body}
     </Modal>
   );
 }
