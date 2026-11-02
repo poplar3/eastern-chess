@@ -292,8 +292,9 @@ export const XIANGQI_LESSONS: Lesson[] = [
       },
     ],
     tasks: [
-      { kind: 'puzzles', concept: 'fork', count: 2 },
-      { kind: 'puzzles', concept: 'material-gain', count: 3 },
+      { kind: 'puzzles', concept: 'hanging-piece', count: 3 },
+      { kind: 'puzzles', concept: 'material-gain', count: 2 },
+      { kind: 'puzzles', concept: 'fork', count: 1 },
     ],
   },
   // ---------- Уровень 4: партия ----------
