@@ -3,9 +3,7 @@ import { describePlan } from '../analysis/plan';
 import { QUALITY_INFO } from '../analysis/quality';
 import type { Game } from '../core/game';
 import { formatMove } from '../core/notation';
-import { toFen } from '../core/rules';
 import { formatScore, scoreForCho, type PvInfo } from '../engine/engine';
-import { SIDE_NAMES } from './pieces';
 
 export type EngineStatus = { state: 'loading' } | { state: 'ready'; name: string } | { state: 'error'; message: string };
 export const ARROW_COLORS = ['#2f6fd6', '#d97a00', '#7b8794'];
@@ -39,7 +37,8 @@ interface Props {
 export function AiPanel(p: Props) {
   const ready = p.status.state === 'ready';
   const top = p.lines?.lines[0];
-  const plan = top && p.lines ? describePlan(p.lines.fen, top.pv) : null;
+  const v = p.game.variant;
+  const plan = top && p.lines ? describePlan(p.lines.fen, top.pv, 8, v) : null;
   const last = p.lastReview;
   return (
     <div className="panel ai-panel">
@@ -74,7 +73,7 @@ export function AiPanel(p: Props) {
           <span className="q-badge" style={{ background: QUALITY_INFO[last.quality].color }}>
             {QUALITY_INFO[last.quality].mark || '•'}
           </span>{' '}
-          {SIDE_NAMES[last.mover]}: {formatMove(p.game.history[last.ply - 1])} — <b>{QUALITY_INFO[last.quality].ru}</b>
+          {v.sides[last.mover]}: {formatMove(p.game.history[last.ply - 1], v)} — <b>{QUALITY_INFO[last.quality].ru}</b>
           {last.loss >= 1 && <span className="muted"> (−{Math.round(last.loss)}% шансов)</span>}
           {last.quality !== 'best' && last.before.best && (
             <div className="muted small">Лучший ход был: {bestText(p.game, last)}</div>
@@ -96,9 +95,9 @@ export function AiPanel(p: Props) {
             {p.lines.lines.slice(0, 3).map((l, i) => (
               <li key={l.multipv}>
                 <span className="pv-dot" style={{ background: ARROW_COLORS[i] }} />
-                <b>{formatScore(scoreForCho(l.score, p.lines!.turn))}</b>
+                <b>{formatScore(scoreForCho(l.score, p.lines!.turn), v.sides)}</b>
                 <span className="muted"> · глубина {l.depth}</span>
-                <div className="pv-text">{describePlan(p.lines!.fen, l.pv, 6).moves.join(', ')}</div>
+                <div className="pv-text">{describePlan(p.lines!.fen, l.pv, 6, v).moves.join(', ')}</div>
               </li>
             ))}
           </ol>
@@ -127,5 +126,5 @@ export function AiPanel(p: Props) {
 
 function bestText(game: Game, r: MoveReview): string {
   const before = r.ply === 1 ? game.start : game.history[r.ply - 2].pos;
-  return describePlan(toFen(before), [r.before.best!], 1).moves[0] ?? r.before.best!;
+  return describePlan(game.variant.toFen(before), [r.before.best!], 1, game.variant).moves[0] ?? r.before.best!;
 }

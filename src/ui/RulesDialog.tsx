@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import type { PieceType } from '../core/rules';
 import { PIECE_VALUES } from '../core/rules';
+import type { Variant } from '../core/types';
 import { Modal } from './Modal';
 import { PIECE_NAMES, PieceIcon, type PieceStyle } from './pieces';
+import { ShogiRules, XiangqiRules } from './RulesOther';
 
 const PIECE_RULES: { t: PieceType; text: ReactNode }[] = [
   {
@@ -63,9 +65,17 @@ const PIECE_RULES: { t: PieceType; text: ReactNode }[] = [
   },
 ];
 
-export function RulesDialog({ style, onClose }: { style: PieceStyle; onClose: () => void }) {
+export function RulesDialog({ variant, style, onClose }: { variant?: Variant; style: PieceStyle; onClose: () => void }) {
+  const id = variant?.id ?? 'janggi';
   return (
-    <Modal title="Краткие правила Чанги" onClose={onClose} wide>
+    <Modal title={`Краткие правила: ${variant?.name ?? 'Чанги'}`} onClose={onClose} wide>
+      {id === 'xiangqi' ? <XiangqiRules style={style} /> : id === 'shogi' ? <ShogiRules style={style} /> : <JanggiRules style={style} />}
+    </Modal>
+  );
+}
+
+function JanggiRules({ style }: { style: PieceStyle }) {
+  return (
       <div className="rules">
         <section>
           <h3>Цель игры</h3>
@@ -148,6 +158,5 @@ export function RulesDialog({ style, onClose }: { style: PieceStyle; onClose: ()
           </p>
         </section>
       </div>
-    </Modal>
   );
 }

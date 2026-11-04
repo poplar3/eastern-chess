@@ -1,21 +1,26 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Game } from '../core/game';
-import { findGeneral, isPass, moveToUci, parseSquare, uciToMove, type Move } from '../core/rules';
-import { LEVELS } from '../puzzles';
-import { lessonTasks, LESSONS, loadProgress, saveProgress, type ConcreteTask, type Diagram, type Lesson } from '../training';
+import { JANGGI } from '../core/janggi';
+import { isPass, type Move } from '../core/types';
+import { levelsFor } from '../puzzles';
+import { lessonsFor, lessonTasks, loadProgress, saveProgress, type ConcreteTask, type Diagram, type Lesson } from '../training';
 import type { BestTask, ChoiceTask, FindTask, MovesTask } from '../training/types';
 import { describePlan } from '../analysis/plan';
 import { getEngine, type PvInfo, type Score } from '../engine/engine';
 import { Board, type Arrow } from './Board';
+import { useMoveInput } from './moveInput';
 import type { PieceStyle } from './pieces';
+import type { Variant } from '../core/types';
 
 const GREEN = '#1f8a4c';
 const GRAY = '#7b8794';
 const BLUE = '#2f6fd6';
 
-export function TrainingView({ style }: { style: PieceStyle }) {
+export function TrainingView({ style, variant = JANGGI }: { style: PieceStyle; variant?: Variant }) {
   const [progress, setProgress] = useState(loadProgress);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const LESSONS = lessonsFor(variant.id);
+  const LEVELS = levelsFor(variant.id);
 
   const markDone = (id: string, task: number) =>
     setProgress((p) => {
@@ -31,6 +36,8 @@ export function TrainingView({ style }: { style: PieceStyle }) {
       <LessonView
         key={lesson.id}
         lesson={lesson}
+        lessons={LESSONS}
+        variant={variant}
         style={style}
         done={progress[lesson.id] ?? []}
         onDone={(i) => markDone(lesson.id, i)}
@@ -40,7 +47,7 @@ export function TrainingView({ style }: { style: PieceStyle }) {
     );
   }
 
-  const total = (l: Lesson) => lessonTasks(l).length;
+  const total = (l: Lesson) => lessonTasks(l, variant.id).length;
   const doneCount = (l: Lesson) => (progress[l.id] ?? []).length;
   const finished = LESSONS.filter((l) => doneCount(l) >= total(l)).length;
 
@@ -90,6 +97,8 @@ export function TrainingView({ style }: { style: PieceStyle }) {
 
 interface LessonProps {
   lesson: Lesson;
+  lessons: Lesson[];
+  variant: Variant;
   style: PieceStyle;
   done: number[];
   onDone: (task: number) => void;
@@ -98,8 +107,8 @@ interface LessonProps {
 }
 
 /** Шаг урока: −1 — теория, 0…N−1 — задания. */
-function LessonView({ lesson, style, done, onDone, onBack, onNext }: LessonProps) {
-  const tasks = useMemo(() => lessonTasks(lesson), [lesson]);
+function LessonView({ lesson, lessons: LESSONS, variant, style, done, onDone, onBack, onNext }: LessonProps) {
+  const tasks = useMemo(() => lessonTasks(lesson, variant.id), [lesson, variant.id]);
   const diagrams = lesson.theory.flatMap((b) => ('diagram' in b ? [b.diagram] : []));
   const [step, setStep] = useState(-1);
   const [diagram, setDiagram] = useState<Diagram | null>(diagrams[0] ?? null);
@@ -152,7 +161,7 @@ function LessonView({ lesson, style, done, onDone, onBack, onNext }: LessonProps
       <main className="layout">
         <div className="board-area">
           <div className="board-column">
-            <div className="board-wrap">{diagram && <DiagramBoard diagram={diagram} style={style} />}</div>
+            <div className="board-wrap">{diagram && <DiagramBoard diagram={diagram} style={style} variant={variant} />}</div>
           </div>
         </div>
         <aside className="side">
@@ -181,6 +190,7 @@ function LessonView({ lesson, style, done, onDone, onBack, onNext }: LessonProps
     <TaskView
       key={`${lesson.id}-${step}`}
       task={task}
+      variant={variant}
       style={style}
       solved={done.includes(step)}
       onSolved={() => onDone(step)}
@@ -198,17 +208,34 @@ function LessonView({ lesson, style, done, onDone, onBack, onNext }: LessonProps
   );
 }
 
-function DiagramBoard({ diagram, style }: { diagram: Diagram; style: PieceStyle }) {
-  const g = useMemo(() => new Game(diagram.fen), [diagram]);
-  const arrows: Arrow[] = (diagram.arrows ?? []).map(([a, b]) => ({ from: parseSquare(a), to: parseSquare(b), color: BLUE, main: true }));
-  const marks = (diagram.marks ?? []).map((s) => ({ from: -1, to: parseSquare(s) }));
+function DiagramBoard({ diagram, style, variant }: { diagram: Diagram; style: PieceStyle; variant: Variant }) {
+  const g = useMemo(() => new Game(diagram.fen, variant), [diagram, variant]);
+  const sq = (name: string) => (name.includes('@') ? -1 : variant.parseSquare(name));
+  const arrows: Arrow[] = (diagram.arrows ?? []).map(([a, b]) => {
+    const drop = a.includes('@') ? a.split('@')[0] : undefined;
+    return { from: sq(a), to: sq(b), drop, side: g.turn, color: BLUE, main: true };
+  });
+  const marks = (diagram.marks ?? []).map((s) => ({ from: -1, to: variant.parseSquare(s) }));
   return (
-    <Board board={g.position.board} style={style} flipped={false} selected={null} targets={marks} lastMove={null} checkSquare={null} arrows={arrows} onSquareClick={() => {}} />
+    <Board
+      board={g.position.board}
+      style={style}
+      flipped={false}
+      selected={null}
+      targets={marks}
+      lastMove={null}
+      checkSquare={null}
+      arrows={arrows}
+      onSquareClick={() => {}}
+      variant={variant}
+      hands={g.position.hands}
+    />
   );
 }
 
 interface TaskProps {
   task: ConcreteTask;
+  variant: Variant;
   style: PieceStyle;
   solved: boolean;
   onSolved: () => void;
@@ -239,9 +266,9 @@ function Shell({ board, children }: { board: ReactNode; children: ReactNode }) {
   );
 }
 
-function MovesTaskView({ task, style, solved, onSolved, head, foot }: TaskProps & { task: MovesTask }) {
-  const g = useMemo(() => new Game(task.fen), [task]);
-  const from = parseSquare(task.square);
+function MovesTaskView({ task, variant, style, solved, onSolved, head, foot }: TaskProps & { task: MovesTask }) {
+  const g = useMemo(() => new Game(task.fen, variant), [task, variant]);
+  const from = variant.parseSquare(task.square);
   const correct = useMemo(() => new Set(g.legalMoves().filter((m) => m.from === from && !isPass(m)).map((m) => m.to)), [g, from]);
   const [marked, setMarked] = useState<Set<number>>(new Set());
   const [checked, setChecked] = useState<null | { missed: number[]; extra: number[] }>(null);
@@ -278,6 +305,8 @@ function MovesTaskView({ task, style, solved, onSolved, head, foot }: TaskProps 
           checkSquare={null}
           arrows={arrows}
           onSquareClick={toggle}
+          variant={variant}
+          hands={g.position.hands}
         />
       }
     >
@@ -306,9 +335,9 @@ function MovesTaskView({ task, style, solved, onSolved, head, foot }: TaskProps 
   );
 }
 
-function ChoiceTaskView({ task, style, solved, onSolved, head, foot }: TaskProps & { task: ChoiceTask }) {
+function ChoiceTaskView({ task, variant, style, solved, onSolved, head, foot }: TaskProps & { task: ChoiceTask }) {
   const [picked, setPicked] = useState<number | null>(null);
-  const g = useMemo(() => (task.fen ? new Game(task.fen) : null), [task]);
+  const g = useMemo(() => (task.fen ? new Game(task.fen, variant) : null), [task, variant]);
   const pick = (i: number) => {
     setPicked(i);
     if (i === task.answer) onSolved();
@@ -317,7 +346,19 @@ function ChoiceTaskView({ task, style, solved, onSolved, head, foot }: TaskProps
     <Shell
       board={
         g ? (
-          <Board board={g.position.board} style={style} flipped={false} selected={null} targets={[]} lastMove={null} checkSquare={null} arrows={[]} onSquareClick={() => {}} />
+          <Board
+            board={g.position.board}
+            style={style}
+            flipped={false}
+            selected={null}
+            targets={[]}
+            lastMove={null}
+            checkSquare={null}
+            arrows={[]}
+            onSquareClick={() => {}}
+            variant={variant}
+            hands={g.position.hands}
+          />
         ) : (
           <div className="choice-placeholder">?</div>
         )
@@ -344,12 +385,11 @@ function ChoiceTaskView({ task, style, solved, onSolved, head, foot }: TaskProps
   );
 }
 
-function FindTaskView({ task, style, solved, onSolved, head, foot }: TaskProps & { task: FindTask }) {
-  const [game, setGame] = useState(() => new Game(task.fen));
+function FindTaskView({ task, variant: v, style, solved, onSolved, head, foot }: TaskProps & { task: FindTask }) {
+  const [game, setGame] = useState(() => new Game(task.fen, v));
   const [, setV] = useState(0);
-  const bump = () => setV((v) => v + 1);
-  const solver = useMemo(() => new Game(task.fen).turn, [task]);
-  const [selected, setSelected] = useState<number | null>(null);
+  const bump = () => setV((x) => x + 1);
+  const solver = useMemo(() => new Game(task.fen, v).turn, [task, v]);
   const [status, setStatus] = useState<'play' | 'wrong' | 'reply' | 'done' | 'shown'>('play');
   const [hint, setHint] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -359,9 +399,9 @@ function FindTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
   const lastStep = task.line ? step >= task.line.length - 1 : true;
 
   const accepts = (m: Move) => {
-    const probe = new Game(game.fen);
+    const probe = new Game(game.fen, v);
     const h = probe.play(m);
-    const uci = moveToUci(m);
+    const uci = v.moveToUci(m);
     if (task.line && !lastStep) return uci === task.line[step];
     if (task.goal === 'mate') return probe.result()?.reason === 'checkmate';
     if (task.goal === 'check') return h.check;
@@ -371,7 +411,6 @@ function FindTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
   };
 
   const tryMove = (m: Move) => {
-    setSelected(null);
     if (!accepts(m)) {
       setStatus('wrong');
       return;
@@ -394,38 +433,30 @@ function FindTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
     );
   };
 
-  const onSquareClick = (s: number) => {
-    if (status !== 'play' && status !== 'wrong') return;
-    const p = game.position.board[s];
-    if (selected !== null) {
-      const m = game.legalMoves().find((x) => x.from === selected && x.to === s && !isPass(x));
-      if (m) return tryMove(m);
-    }
-    if (p && (p === p.toUpperCase() ? 'w' : 'b') === game.turn) setSelected(s === selected ? null : s);
-    else setSelected(null);
-  };
+  const input = useMoveInput(game, status === 'play' || status === 'wrong', tryMove, style);
 
   /** Ход, который покажет подсказка или решение. */
   const solutionMove = (): Move | null => {
-    if (task.line) return uciToMove(task.line[step]);
-    if (task.moves?.length) return uciToMove(task.moves[0]);
+    if (task.line) return v.uciToMove(task.line[step]);
+    if (task.moves?.length) return v.uciToMove(task.moves[0]);
     return game.legalMoves().find((m) => !isPass(m) && accepts(m)) ?? null;
   };
 
   const reset = () => {
     timers.current.forEach(clearTimeout);
-    setGame(new Game(task.fen));
+    setGame(new Game(task.fen, v));
     setStatus('play');
-    setSelected(null);
+    input.clear();
     setHint(false);
   };
 
   const show = () => {
     timers.current.forEach(clearTimeout);
-    const g = new Game(task.fen);
+    const g = new Game(task.fen, v);
     setGame(g);
     setStatus('shown');
-    const line = task.line ?? (solutionMove() ? [moveToUci(solutionMove()!)] : []);
+    input.clear();
+    const line = task.line ?? (solutionMove() ? [v.moveToUci(solutionMove()!)] : []);
     line.forEach((u, i) =>
       timers.current.push(
         setTimeout(() => {
@@ -440,29 +471,36 @@ function FindTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
   const sm = solving && hint ? solutionMove() : null;
   const last = game.history[game.history.length - 1];
   const result = game.result();
-  const checkSquare = (!result || result.reason === 'checkmate') && game.inCheck() ? findGeneral(game.position.board, game.turn) : null;
-  const targets = selected !== null ? game.legalMoves().filter((m) => m.from === selected) : [];
-  const arrows: Arrow[] = sm ? [{ from: sm.from, to: sm.to, color: GRAY, dashed: true }] : [];
+  const checkSquare = (!result || result.reason === 'checkmate') && game.inCheck() ? v.kingSquare(game.position.board, game.turn) : null;
+  const arrows: Arrow[] = sm ? [{ from: sm.from, to: sm.to, drop: sm.drop, side: game.turn, color: GRAY, dashed: true }] : [];
 
   return (
     <Shell
       board={
-        <Board
-          board={game.position.board}
-          style={style}
-          flipped={solver === 'b'}
-          selected={selected}
-          targets={targets}
-          lastMove={last ? last.move : null}
-          checkSquare={checkSquare}
-          arrows={arrows}
-          onSquareClick={onSquareClick}
-        />
+        <>
+          <Board
+            board={game.position.board}
+            style={style}
+            flipped={solver === 'b'}
+            selected={input.selected}
+            targets={input.targets}
+            lastMove={last ? last.move : null}
+            checkSquare={checkSquare}
+            arrows={arrows}
+            onSquareClick={input.onSquareClick}
+            variant={v}
+            hands={game.position.hands}
+            selectedDrop={input.selectedDrop}
+            turn={game.turn}
+            onHandClick={solving ? input.onHandClick : undefined}
+          />
+          {input.dialog}
+        </>
       }
     >
       {head}
       <p className="puzzle-desc">
-        {task.prompt} {!task.prompt.startsWith('Ход ') && <span className="muted">Ход {solver === 'w' ? 'Чо' : 'Хана'}.</span>}
+        {task.prompt} {!task.prompt.startsWith('Ход ') && <span className="muted">Ход {v.sidesGen[solver]}.</span>}
       </p>
       {task.hint && solving && <div className="muted small">Подсказка: {task.hint}</div>}
       {status === 'wrong' && <div className="alert check">Не тот ход. Попробуйте ещё раз.</div>}
@@ -497,12 +535,11 @@ const BEST_DEPTH = 14;
 const BEST_LINES = 6;
 const scoreVal = (sc: Score) => (sc.mate !== undefined ? (sc.mate > 0 ? 100000 - sc.mate : -100000 - sc.mate) : (sc.cp ?? 0));
 
-function BestTaskView({ task, style, solved, onSolved, head, foot }: TaskProps & { task: BestTask }) {
-  const [game, setGame] = useState(() => new Game(task.fen));
-  const solver = useMemo(() => new Game(task.fen).turn, [task]);
+function BestTaskView({ task, variant: v, style, solved, onSolved, head, foot }: TaskProps & { task: BestTask }) {
+  const [game, setGame] = useState(() => new Game(task.fen, v));
+  const solver = useMemo(() => new Game(task.fen, v).turn, [task, v]);
   const [lines, setLines] = useState<PvInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [selected, setSelected] = useState<number | null>(null);
   const [verdict, setVerdict] = useState<null | { ok: boolean; best: boolean; text: string }>(null);
   const [tries, setTries] = useState(0);
   const pending = useRef<Move | null>(null);
@@ -513,10 +550,10 @@ function BestTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
   useEffect(() => {
     let alive = true;
     const engine = getEngine();
-    const legal = new Set(new Game(task.fen).legalMoves().map(moveToUci));
+    const legal = new Set(new Game(task.fen, v).legalMoves().map(v.moveToUci));
     const run = (attempt: number) =>
       engine
-        .search({ fen: task.fen, depth: BEST_DEPTH, multipv: BEST_LINES, threads: 1, clearHash: true })
+        .search({ variant: v.engine, fen: task.fen, depth: BEST_DEPTH, multipv: BEST_LINES, threads: 1, clearHash: true })
         .then((r) => {
           if (!alive) return;
           const ls = r.lines.filter((l) => legal.has(l.pv[0]));
@@ -531,19 +568,19 @@ function BestTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
       alive = false;
       engine.stop();
     };
-  }, [task]);
+  }, [task, v]);
 
   const judge = (m: Move, ls: PvInfo[]) => {
-    const uci = moveToUci(m);
+    const uci = v.moveToUci(m);
     const tol = task.tolerance ?? 60;
     const best = scoreVal(ls[0].score);
     const mine = ls.find((l) => l.pv[0] === uci);
     const loss = mine ? best - scoreVal(mine.score) : Infinity;
-    const g = new Game(task.fen);
+    const g = new Game(task.fen, v);
     g.play(m);
     setGame(g);
     if (loss <= tol) {
-      setVerdict({ ok: true, best: mine === ls[0] || loss <= 5, text: describePlan(task.fen, mine!.pv, 7).text });
+      setVerdict({ ok: true, best: mine === ls[0] || loss <= 5, text: describePlan(task.fen, mine!.pv, 7, v).text });
       onSolved();
     } else {
       setTries((t) => t + 1);
@@ -561,64 +598,61 @@ function BestTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
   }, [lines]);
 
   const tryMove = (m: Move) => {
-    setSelected(null);
     if (lines) judge(m, lines);
     else {
       pending.current = m;
-      const g = new Game(task.fen);
+      const g = new Game(task.fen, v);
       g.play(m);
       setGame(g);
     }
   };
 
   const reset = () => {
-    setGame(new Game(task.fen));
+    setGame(new Game(task.fen, v));
     setVerdict(null);
-    setSelected(null);
+    input.clear();
   };
 
   const canMove = !verdict && !pending.current && !failed;
-  const onSquareClick = (s: number) => {
-    if (!canMove) return;
-    const p = game.position.board[s];
-    if (selected !== null) {
-      const m = game.legalMoves().find((x) => x.from === selected && x.to === s);
-      if (m) return tryMove(m);
-    }
-    if (p && (p === p.toUpperCase() ? 'w' : 'b') === game.turn) setSelected(s === selected ? null : s);
-    else setSelected(null);
-  };
+  const input = useMoveInput(game, canMove, tryMove, style);
   const pass = () => {
-    const k = findGeneral(game.position.board, game.turn);
+    const k = v.kingSquare(game.position.board, game.turn);
     const m = { from: k, to: k };
     if (game.isLegal(m)) tryMove(m);
   };
 
   const showBest = verdict && !verdict.ok && tries >= 2 && lines;
-  const bestMove = showBest ? uciToMove(lines[0].pv[0]) : null;
+  const bestMove = showBest ? v.uciToMove(lines[0].pv[0]) : null;
   const last = game.history[game.history.length - 1];
-  const targets = selected !== null ? game.legalMoves().filter((m) => m.from === selected) : [];
-  const arrows: Arrow[] = bestMove ? [{ from: bestMove.from, to: bestMove.to, color: GREEN, main: true }] : [];
+  const arrows: Arrow[] = bestMove ? [{ from: bestMove.from, to: bestMove.to, drop: bestMove.drop, side: solver, color: GREEN, main: true }] : [];
 
   return (
     <Shell
       board={
-        <Board
-          board={game.position.board}
-          style={style}
-          flipped={solver === 'b'}
-          selected={selected}
-          targets={targets}
-          lastMove={last ? last.move : null}
-          checkSquare={game.inCheck() ? findGeneral(game.position.board, game.turn) : null}
-          arrows={arrows}
-          onSquareClick={onSquareClick}
-        />
+        <>
+          <Board
+            board={game.position.board}
+            style={style}
+            flipped={solver === 'b'}
+            selected={input.selected}
+            targets={input.targets}
+            lastMove={last ? last.move : null}
+            checkSquare={game.inCheck() ? v.kingSquare(game.position.board, game.turn) : null}
+            arrows={arrows}
+            onSquareClick={input.onSquareClick}
+            variant={v}
+            hands={game.position.hands}
+            selectedDrop={input.selectedDrop}
+            turn={game.turn}
+            onHandClick={canMove ? input.onHandClick : undefined}
+          />
+          {input.dialog}
+        </>
       }
     >
       {head}
       <p className="puzzle-desc">
-        {task.prompt} {!task.prompt.startsWith('Ход ') && <span className="muted">Ход {solver === 'w' ? 'Чо' : 'Хана'}.</span>}
+        {task.prompt} {!task.prompt.startsWith('Ход ') && <span className="muted">Ход {v.sidesGen[solver]}.</span>}
       </p>
       <div className="muted small">
         {failed
@@ -637,12 +671,12 @@ function BestTaskView({ task, style, solved, onSolved, head, foot }: TaskProps &
       )}
       {verdict && !verdict.ok && (
         <div className="alert check">
-          Есть ход заметно сильнее. {tries >= 2 && lines ? <>Лучший ход показан стрелкой: {describePlan(task.fen, lines[0].pv, 1).moves[0]}.</> : 'Попробуйте ещё раз.'}
+          Есть ход заметно сильнее. {tries >= 2 && lines ? <>Лучший ход показан стрелкой: {describePlan(task.fen, lines[0].pv, 1, v).moves[0]}.</> : 'Попробуйте ещё раз.'}
         </div>
       )}
       {solved && !verdict && <div className="muted small">✓ Задание уже выполнено.</div>}
       <div className="ai-buttons">
-        {canMove && (
+        {canMove && v.hasPass && (
           <button className="btn" onClick={pass} title="Пропуск хода тоже может быть лучшим ходом">
             Пропустить ход
           </button>

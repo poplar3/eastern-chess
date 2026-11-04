@@ -1,11 +1,7 @@
-import { type HistoryEntry } from './game';
-import { isPass, squareName, typeOf } from './rules';
-import { PIECE_NAMES } from '../ui/pieces';
+import { JANGGI } from './janggi';
+import type { HistoryEntry, Variant } from './types';
 
-/** Запись хода по-русски: «Кл a1–a3», «К b1×c3+», «пропуск». */
-export function formatMove(h: HistoryEntry): string {
-  if (isPass(h.move)) return 'пропуск';
-  const name = PIECE_NAMES[typeOf(h.piece)].short;
-  const sep = h.captured ? '×' : '–';
-  return `${name} ${squareName(h.move.from)}${sep}${squareName(h.move.to)}${h.check ? '+' : ''}`;
+/** Запись хода по-русски: «Кл a1–a3», «К b1×c3+», «пропуск»; для сёги — «П 7g–7f», «С*5e». */
+export function formatMove(h: HistoryEntry, variant: Variant = JANGGI): string {
+  return variant.formatMove(h);
 }

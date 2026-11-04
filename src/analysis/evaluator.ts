@@ -2,7 +2,7 @@
 // Все оценки делаются на фиксированную глубину в один поток с очисткой хеша, поэтому повторный запрос
 // для той же позиции даёт тот же ответ, а подсказка и оценка хода согласованы между собой.
 import { Game } from '../core/game';
-import { colorOf, legalMoves, opposite, type Color } from '../core/rules';
+import { colorOf, opposite, type Color } from '../core/types';
 import type { Engine, PvInfo, Score } from '../engine/engine';
 import { classifyMove, cpForCho, type Quality } from './quality';
 
@@ -40,7 +40,7 @@ export interface MoveReview {
 
 /** Партия, остановленная на полуходе `ply` (0 — начальная позиция). */
 export function gameAtPly(game: Game, ply: number): Game {
-  const g = new Game(game.startFen);
+  const g = new Game(game.startFen, game.variant);
   for (const h of game.history.slice(0, ply)) g.play(h.move);
   return g;
 }
@@ -58,7 +58,7 @@ export class Evaluator {
   }
 
   private key(game: Game, ply: number) {
-    return `${game.startFen}|${game.uciMoves.slice(0, ply).join(' ')}`;
+    return `${game.variant.id}|${game.startFen}|${game.uciMoves.slice(0, ply).join(' ')}`;
   }
 
   /**
@@ -74,7 +74,7 @@ export class Evaluator {
     const result = g.result();
     if (result) {
       const ev: PositionEval = {
-        cpCho: result.winner === 'w' ? 10000 : -10000,
+        cpCho: result.winner === null ? 0 : result.winner === 'w' ? 10000 : -10000,
         score: null,
         turn: g.turn,
         best: null,
@@ -86,8 +86,9 @@ export class Evaluator {
       this.cache.set(key, ev);
       return ev;
     }
-    const expectedLines = Math.min(MULTIPV, legalMoves(g.position).length);
+    const expectedLines = Math.min(MULTIPV, g.legalMoves().length);
     const r = await this.engine.search({
+      variant: game.variant.engine,
       fen: game.startFen,
       moves: game.uciMoves.slice(0, ply),
       depth,

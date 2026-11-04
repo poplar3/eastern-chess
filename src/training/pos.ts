@@ -9,3 +9,27 @@ export function pos(turn: Color, pieces: Record<string, string>): string {
   for (const [sq, p] of Object.entries(pieces)) board[parseSquare(sq)] = p;
   return toFen({ board, turn, halfmove: 0, fullmove: 1 });
 }
+
+/**
+ * FEN Сёги по расстановке (поля в записи движка: a1–i9, сэнтэ внизу):
+ * `shogiPos('w', { e1: 'K', e9: 'k' }, 'GP')` — в руке у сэнтэ золото и пешка.
+ */
+export function shogiPos(turn: Color, pieces: Record<string, string>, hand = ''): string {
+  const rows: string[] = [];
+  for (let r = 9; r >= 1; r--) {
+    let row = '';
+    let empty = 0;
+    for (const f of 'abcdefghi') {
+      const p = pieces[`${f}${r}`];
+      if (!p) empty++;
+      else {
+        if (empty) row += empty;
+        empty = 0;
+        row += p;
+      }
+    }
+    if (empty) row += empty;
+    rows.push(row);
+  }
+  return `${rows.join('/')}[${hand}] ${turn} - - 0 1`;
+}

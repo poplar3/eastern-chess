@@ -5,7 +5,9 @@
 // (как в составленных задачах 묘수풀이) и в них ищутся маты в 2–4 хода.
 // В режиме MODE=bakbo составляются задачи по канону 박보: каждый ход решающего — шах,
 // мат в MIN_MATE–MAX_MATE ходов (по умолчанию 3–7), позиции с большим числом фигур.
-// Использование: FAIRY_STOCKFISH=<путь> [MODE=compose] node scripts/gen-puzzles.mjs [число_партий|число_позиций] [выход.json]
+// VARIANT=xiangqi или VARIANT=shogi — задачи для Сянци или Сёги (по умолчанию Чанги). Для них MODE=checks —
+// маты, где каждый ход решающего — шах (в сёги это канон цумэ), с позициями как в MODE=compose.
+// Использование: FAIRY_STOCKFISH=<путь> [VARIANT=…] [MODE=compose] node scripts/gen-puzzles.mjs [число_партий|число_позиций] [выход.json]
 import { Engine, isPassUci } from './uci-engine.mjs';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -14,17 +16,33 @@ const GAMES = Number(process.argv[2] ?? 40);
 const OUT = process.argv[3] ?? new URL('../src/puzzles/generated.json', import.meta.url).pathname;
 const WORKERS = Number(process.env.WORKERS ?? 4);
 const MODE = process.env.MODE ?? 'games';
+const VARIANT = process.env.VARIANT ?? 'janggi';
+const CHECKS = MODE === 'bakbo' || MODE === 'checks';
 const MIN_MATE = Number(process.env.MIN_MATE ?? (MODE === 'bakbo' ? 3 : 2));
-const MAX_MATE = Number(process.env.MAX_MATE ?? (MODE === 'bakbo' ? 7 : 4));
+const MAX_MATE = Number(process.env.MAX_MATE ?? (MODE === 'bakbo' ? 7 : MODE === 'checks' ? 5 : 4));
 
 const vite = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom', logLevel: 'error' });
 const R = await vite.ssrLoadModule('/src/core/rules.ts');
-const { Game } = await vite.ssrLoadModule('/src/core/game.ts');
+const { Game: BaseGame } = await vite.ssrLoadModule('/src/core/game.ts');
+const { getVariant } = await vite.ssrLoadModule('/src/core/variants.ts');
+const V = getVariant(VARIANT);
+class Game extends BaseGame {
+  constructor(fen) {
+    super(fen, V);
+  }
+}
 
 const val = (s) => (s.mate !== undefined ? (s.mate > 0 ? 100000 - s.mate : -100000 - s.mate) : s.cp);
 const rnd = (n) => Math.floor(Math.random() * n);
-const material = (board, c) => R.materialPoints(board, c) - (c === 'b' ? R.HAN_BONUS : 0);
-const fenOf = (g) => R.toFen({ ...g.position, halfmove: 0, fullmove: 1 });
+/** Материал стороны: фигуры на доске и (в сёги) в руке. */
+function material(pos, c) {
+  let sum = 0;
+  for (const p of pos.board) if (p && (p === p.toUpperCase() ? 'w' : 'b') === c) sum += V.pieceValue(p);
+  for (const [t, n] of Object.entries(pos.hands?.[c] ?? {})) sum += V.pieceValue(t) * n;
+  return sum;
+}
+const fenOf = (g) => V.toFen({ ...g.position, halfmove: 0, fullmove: 1 });
+const keyOf = (fen) => fen.split(' ').slice(0, 2).join(' ');
 
 /**
  * Мат в N с единственным решением на каждом ходе решающего (кроме последнего).
@@ -41,7 +59,7 @@ async function verifyMate(eng, fen, n, checksOnly = false) {
     // Другой ход может тоже вести к мату, но только медленнее — иначе решение не единственное.
     if (left > 1 && ls[1] && ls[1].score.mate !== undefined && ls[1].score.mate > 0 && ls[1].score.mate <= left) return null;
     const mv = top.pv[0];
-    if (isPassUci(mv)) return null;
+    if (VARIANT === 'janggi' && isPassUci(mv)) return null;
     const h = g.playUci(mv);
     if (checksOnly && !h.check) return null;
     line.push(mv);
@@ -62,7 +80,7 @@ async function verifyTactic(eng, fen) {
   const g = new Game(fen);
   const solver = g.turn;
   const opp = R.opposite(solver);
-  const start = material(g.position.board, solver) - material(g.position.board, opp);
+  const start = material(g.position, solver) - material(g.position, opp);
   if (Math.abs(start) > 6) return null;
   const line = [];
   for (let step = 0; step < 3; step++) {
@@ -72,7 +90,7 @@ async function verifyTactic(eng, fen) {
     if (a.score.cp < 250) return null;
     if (b && val(a.score) - val(b.score) < 250) return null;
     const mv = a.pv[0];
-    if (isPassUci(mv)) return null;
+    if (VARIANT === 'janggi' && isPassUci(mv)) return null;
     g.playUci(mv);
     line.push(mv);
     if (g.result()) return null;
@@ -81,10 +99,10 @@ async function verifyTactic(eng, fen) {
     if (!def[0]) return null;
     const reply = def[0].pv[0];
     // Если решающий уже выиграл материал и ответ ничего не возвращает, задача закончена.
-    const gainNow = material(g.position.board, solver) - material(g.position.board, opp) - start;
+    const gainNow = material(g.position, solver) - material(g.position, opp) - start;
     const g2 = new Game(fenOf(g));
     g2.playUci(reply);
-    const gainAfterReply = material(g2.position.board, solver) - material(g2.position.board, opp) - start;
+    const gainAfterReply = material(g2.position, solver) - material(g2.position, opp) - start;
     if (gainNow >= 3 && gainAfterReply >= 3) return { line, gain: gainAfterReply };
     g.playUci(reply);
     line.push(reply);
@@ -94,7 +112,7 @@ async function verifyTactic(eng, fen) {
 }
 
 const found = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : [];
-const seen = new Set(found.map((p) => p.fen.split(' ').slice(0, 2).join(' ')));
+const seen = new Set(found.map((p) => keyOf(p.fen)));
 let gamesLeft = GAMES;
 
 async function worker(id) {
@@ -102,11 +120,11 @@ async function worker(id) {
   await eng.init();
   while (gamesLeft-- > 0) {
     const s = () => R.SETUPS[rnd(4)].id;
-    const g = new Game(R.startFenWithSetups(s(), s()));
+    const g = new Game(VARIANT === 'janggi' ? R.startFenWithSetups(s(), s()) : V.startFen);
     const gameId = Math.random().toString(36).slice(2, 8);
     for (let ply = 0; ply < 160 && !g.result(); ply++) {
       const fen = fenOf(g);
-      const key = fen.split(' ').slice(0, 2).join(' ');
+      const key = keyOf(fen);
       if (ply >= 12 && !seen.has(key)) {
         const quick = await eng.search(fen, 9, 2);
         const top = quick[0];
@@ -207,10 +225,10 @@ async function composer(id) {
   const eng = new Engine();
   await eng.init();
   while (positionsLeft-- > 0) {
-    const bakbo = MODE === 'bakbo';
-    const fen = bakbo ? randomBakbo() : randomPosition();
+    const bakbo = CHECKS;
+    const fen = VARIANT === 'xiangqi' ? randomXiangqi(bakbo) : VARIANT === 'shogi' ? randomShogi(bakbo) : bakbo ? randomBakbo() : randomPosition();
     if (!fen) continue;
-    const key = fen.split(' ').slice(0, 2).join(' ');
+    const key = keyOf(fen);
     if (seen.has(key)) continue;
     const quick = await eng.search(fen, bakbo ? 12 : 8, 1);
     const top = quick[0];
@@ -218,14 +236,104 @@ async function composer(id) {
     const line = await verifyMate(eng, fen, top.score.mate, bakbo);
     if (!line) continue;
     seen.add(key);
-    found.push({ fen, goal: 'mate', mateIn: top.score.mate, line, game: bakbo ? 'bakbo' : 'compose' });
-    console.log(`[${id}] ${bakbo ? '박보' : 'этюд'}, мат в ${top.score.mate}: ${fen} ${line.join(' ')}`);
+    const kind = MODE === 'checks' ? 'checks' : bakbo ? 'bakbo' : 'compose';
+    found.push({ fen, goal: 'mate', mateIn: top.score.mate, line, game: kind });
+    console.log(`[${id}] ${kind}, мат в ${top.score.mate}: ${fen} ${line.join(' ')}`);
     if (found.length % 5 === 0) writeFileSync(OUT, JSON.stringify(found, null, 1));
   }
   eng.quit();
 }
 
-await Promise.all(Array.from({ length: WORKERS }, (_, i) => (MODE === 'compose' || MODE === 'bakbo' ? composer(i) : worker(i))));
+// ---------- Сянци ----------
+
+const XQ_PALACE = { w: [3, 4, 5].flatMap((f) => [0, 1, 2].map((r) => r * 9 + f)), b: [3, 4, 5].flatMap((f) => [7, 8, 9].map((r) => r * 9 + f)) };
+const XQ_ADVISOR = { w: [3, 5, 13, 21, 23], b: [66, 68, 76, 84, 86] };
+const XQ_ELEPHANT = { w: [2, 6, 18, 22, 26, 38, 42], b: [47, 51, 63, 67, 71, 83, 87] };
+/** Поля, где солдат может стоять в настоящей партии: до реки — только на исходных вертикалях. */
+function xqPawnSquares(c) {
+  return Array.from({ length: 90 }, (_, s) => s).filter((s) => {
+    const f = s % 9, r = Math.floor(s / 9);
+    const rel = c === 'w' ? r : 9 - r;
+    return rel >= 5 || ((rel === 3 || rel === 4) && f % 2 === 0);
+  });
+}
+
+function randomXiangqi(checks) {
+  const att = Math.random() < 0.5 ? 'w' : 'b';
+  const def = att === 'w' ? 'b' : 'w';
+  const board = Array(90).fill(null);
+  const all = Array.from({ length: 90 }, (_, i) => i);
+  const squares = (t, c) => (t === 'K' ? XQ_PALACE[c] : t === 'A' ? XQ_ADVISOR[c] : t === 'B' ? XQ_ELEPHANT[c] : t === 'P' ? xqPawnSquares(c) : all);
+  const put = (t, c) => {
+    const s = pickFree(board, squares(t, c));
+    if (s >= 0) board[s] = c === 'w' ? t : t.toLowerCase();
+  };
+  put('K', def);
+  put('K', att);
+  for (let i = rnd(3); i > 0; i--) put('A', def);
+  for (let i = rnd(3); i > 0; i--) put('B', def);
+  const defPool = ['P', 'P', 'N', 'C', 'R'];
+  for (let i = rnd(checks ? 4 : 3); i > 0; i--) put(defPool[rnd(defPool.length)], def);
+  for (let i = rnd(2); i > 0; i--) put('A', att);
+  const attPool = ['R', 'R', 'C', 'C', 'N', 'N', 'P', 'P', 'P'];
+  for (let i = (checks ? 3 : 2) + rnd(3); i > 0; i--) put(attPool.splice(rnd(attPool.length), 1)[0], att);
+  const pos = { board, turn: att, halfmove: 0, fullmove: 1 };
+  if (V.inCheck({ ...pos, turn: def }) || V.inCheck(pos)) return null;
+  return V.toFen(pos);
+}
+
+// ---------- Сёги ----------
+
+/**
+ * Позиция для цумэ: король защиты в своём углу или в центре своего лагеря, рядом несколько его фигур,
+ * у нападения — 2–4 фигуры у лагеря соперника и 1–3 фигуры в руке. Остальные фигуры — у защиты в руке
+ * не лежат (как в классических цумэ, они «в коробке»), поэтому руку защиты оставляем пустой.
+ */
+function randomShogi(checks) {
+  const att = Math.random() < 0.5 ? 'w' : 'b';
+  const def = att === 'w' ? 'b' : 'w';
+  const rel = (r, c) => (c === 'w' ? r : 8 - r);
+  const board = Array(81).fill(null);
+  const sqs = (pred) => Array.from({ length: 81 }, (_, s) => s).filter((s) => pred(s % 9, Math.floor(s / 9)));
+  const canStand = (t, s, c) => {
+    const rr = rel(Math.floor(s / 9), c);
+    if (t === 'P' || t === 'L') return rr <= 7;
+    if (t === 'N') return rr <= 6;
+    return true;
+  };
+  const put = (t, c, pred) => {
+    const free = sqs(pred).filter((s) => !board[s] && canStand(t.replace('+', ''), s, c));
+    if (t === 'P') {
+      const files = new Set(board.flatMap((p, s) => (p === (c === 'w' ? 'P' : 'p') ? [s % 9] : [])));
+      for (let i = free.length - 1; i >= 0; i--) if (files.has(free[i] % 9)) free.splice(i, 1);
+    }
+    if (!free.length) return -1;
+    const s = free[rnd(free.length)];
+    board[s] = c === 'w' ? t : t.toLowerCase();
+    return s;
+  };
+  // Король защиты — на дальних от нападения горизонталях.
+  const k = put('K', def, (f, r) => rel(r, def) <= 1 && (Math.random() < 0.6 ? f <= 1 || f >= 7 : true));
+  const kf = k % 9, kr = Math.floor(k / 9);
+  const near = (d) => (f, r) => Math.abs(f - kf) <= d && Math.abs(r - kr) <= d;
+  const defPool = ['G', 'G', 'S', 'S', 'P', 'P', 'P', 'N', 'L', 'B'];
+  for (let i = 1 + rnd(checks ? 4 : 3); i > 0; i--) put(defPool[rnd(defPool.length)], def, near(2));
+  const attPool = ['R', '+R', 'B', '+B', 'G', 'S', 'N', 'L', 'P', '+P'];
+  for (let i = 1 + rnd(3); i > 0; i--) put(attPool[rnd(attPool.length)], att, near(3));
+  // Король нападения далеко — в цумэ его часто нет вовсе, но движку нужен король у обеих сторон.
+  put('K', att, (f, r) => rel(r, att) <= 1 && Math.abs(f - kf) >= 3);
+  const handPool = ['G', 'G', 'S', 'S', 'N', 'L', 'P', 'R', 'B'];
+  const hand = {};
+  for (let i = 1 + rnd(3); i > 0; i--) {
+    const t = handPool[rnd(handPool.length)];
+    hand[t] = (hand[t] ?? 0) + 1;
+  }
+  const pos = { board, turn: att, halfmove: 0, fullmove: 1, hands: { [att]: hand, [def]: {} } };
+  if (V.inCheck({ ...pos, turn: def }) || V.inCheck(pos)) return null;
+  return V.toFen(pos);
+}
+
+await Promise.all(Array.from({ length: WORKERS }, (_, i) => (MODE === 'compose' || CHECKS ? composer(i) : worker(i))));
 writeFileSync(OUT, JSON.stringify(found, null, 1));
 await vite.close();
 console.log(`Готово: ${found.length} задач в ${OUT}`);

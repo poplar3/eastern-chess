@@ -1,7 +1,10 @@
 import type { Color, Setup } from './core/rules';
+import type { GameId } from './core/types';
 import type { PieceStyle } from './ui/pieces';
 
 export interface GameConfig {
+  /** Игра: Чанги, Сянци или Сёги. */
+  variant: GameId;
   mode: 'human' | 'bot';
   /** За кого играет человек в партии с ботом. */
   humanColor: Color;
@@ -12,6 +15,7 @@ export interface GameConfig {
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
+  variant: 'janggi',
   mode: 'bot',
   humanColor: 'w',
   level: 3,

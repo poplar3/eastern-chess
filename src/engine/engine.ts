@@ -1,4 +1,5 @@
-// Клиент UCI для Fairy-Stockfish (вариант janggi).
+// Клиент UCI для Fairy-Stockfish (варианты janggi, xiangqi и shogi).
+import type { GameId } from '../core/types';
 import { createTransport, type EngineTransport } from './transport';
 
 export interface Score {
@@ -22,6 +23,8 @@ export interface SearchResult {
 }
 
 export interface SearchOptions {
+  /** Вариант Fairy-Stockfish (UCI_Variant); по умолчанию janggi. */
+  variant?: string;
   fen: string;
   moves?: string[];
   movetime?: number;
@@ -98,7 +101,7 @@ export class Engine {
   private waiters: { test: (l: string) => boolean; resolve: () => void }[] = [];
   private job: Job | null = null;
   private queue: Promise<unknown> = Promise.resolve();
-  private current: { elo?: number; skill?: number; multipv: number; threads: number } = { multipv: 1, threads: 1 };
+  private current: { elo?: number; skill?: number; multipv: number; threads: number; variant: string } = { multipv: 1, threads: 1, variant: 'janggi' };
   /** Увеличивается при каждом stop(): поиски, поставленные в очередь раньше, отменяются. */
   private generation = 0;
   name = '';
@@ -178,6 +181,11 @@ export class Engine {
       await this.init();
       if (gen !== this.generation) return { bestmove: null, lines: [] };
       const multipv = opts.multipv ?? 1;
+      const variant = opts.variant ?? 'janggi';
+      if (variant !== this.current.variant) {
+        this.transport.send(`setoption name UCI_Variant value ${variant}`);
+        this.transport.send('ucinewgame');
+      }
       if (opts.elo !== this.current.elo || opts.skill !== this.current.skill) {
         this.transport.send(`setoption name UCI_LimitStrength value ${opts.elo !== undefined}`);
         if (opts.elo !== undefined) this.transport.send(`setoption name UCI_Elo value ${opts.elo}`);
@@ -187,7 +195,7 @@ export class Engine {
       const threads = opts.threads ?? 1;
       if (threads !== this.current.threads) this.transport.send(`setoption name Threads value ${threads}`);
       if (opts.clearHash) this.transport.send('setoption name Clear Hash');
-      this.current = { elo: opts.elo, skill: opts.skill, multipv, threads };
+      this.current = { elo: opts.elo, skill: opts.skill, multipv, threads, variant };
       await this.isReady();
       if (gen !== this.generation) return { bestmove: null, lines: [] };
       const moves = opts.moves?.length ? ` moves ${opts.moves.join(' ')}` : '';
@@ -225,6 +233,8 @@ export interface BotLevel {
   name: string;
   /** Корейский разряд (кып — ученический, дан — мастерский). */
   rank: string;
+  /** Разряд в сёги (кю и дан). */
+  shogiRank: string;
   elo?: number;
   skill?: number;
   movetime: number;
@@ -238,17 +248,24 @@ export interface BotLevel {
  * корейские разряды указаны по соответствию рейтинга.
  */
 export const BOT_LEVELS: BotLevel[] = [
-  { id: 1, name: 'Новичок', rank: '18 кып', skill: -10, movetime: 200 },
-  { id: 2, name: 'Начинающий', rank: '15 кып', elo: 750, movetime: 300 },
-  { id: 3, name: 'Любитель', rank: '10 кып', elo: 1000, movetime: 400 },
-  { id: 4, name: 'Клубный игрок', rank: '5 кып', elo: 1250, movetime: 500 },
-  { id: 5, name: 'Сильный любитель', rank: '1 кып', elo: 1500, movetime: 700 },
-  { id: 6, name: 'Кандидат', rank: '1 дан', elo: 1800, movetime: 1000 },
-  { id: 7, name: 'Мастер', rank: '3 дан', elo: 2100, movetime: 1500 },
-  { id: 8, name: 'Эксперт', rank: '5 дан', elo: 2400, movetime: 2000 },
-  { id: 9, name: 'Профессионал', rank: '7 дан', elo: 2700, movetime: 3000 },
-  { id: 10, name: 'Максимум', rank: 'без ограничений', movetime: 5000, allThreads: true },
+  { id: 1, name: 'Новичок', rank: '18 кып', shogiRank: '15 кю', skill: -10, movetime: 200 },
+  { id: 2, name: 'Начинающий', rank: '15 кып', shogiRank: '12 кю', elo: 750, movetime: 300 },
+  { id: 3, name: 'Любитель', rank: '10 кып', shogiRank: '8 кю', elo: 1000, movetime: 400 },
+  { id: 4, name: 'Клубный игрок', rank: '5 кып', shogiRank: '5 кю', elo: 1250, movetime: 500 },
+  { id: 5, name: 'Сильный любитель', rank: '1 кып', shogiRank: '1 кю', elo: 1500, movetime: 700 },
+  { id: 6, name: 'Кандидат', rank: '1 дан', shogiRank: '1 дан', elo: 1800, movetime: 1000 },
+  { id: 7, name: 'Мастер', rank: '3 дан', shogiRank: '3 дан', elo: 2100, movetime: 1500 },
+  { id: 8, name: 'Эксперт', rank: '5 дан', shogiRank: '4 дан', elo: 2400, movetime: 2000 },
+  { id: 9, name: 'Профессионал', rank: '7 дан', shogiRank: '5 дан', elo: 2700, movetime: 3000 },
+  { id: 10, name: 'Максимум', rank: 'без ограничений', shogiRank: 'без ограничений', movetime: 5000, allThreads: true },
 ];
+
+/** Разряд уровня в этой игре; для Сянци привычной лестницы разрядов нет — показывается только Elo. */
+export function levelRank(l: BotLevel, game: GameId): string {
+  if (game === 'janggi') return l.rank;
+  if (game === 'shogi') return l.shogiRank;
+  return l.id === 10 ? l.rank : '';
+}
 
 /** Оценка с точки зрения Чо (положительная — перевес Чо). */
 export function scoreForCho(score: Score, sideToMove: 'w' | 'b'): Score {
@@ -256,12 +273,13 @@ export function scoreForCho(score: Score, sideToMove: 'w' | 'b'): Score {
   return score.mate !== undefined ? { mate: score.mate * k } : { cp: (score.cp ?? 0) * k };
 }
 
-export function formatScore(score: Score): string {
+/** Оценка словами; `sides` — названия сторон в этой игре. */
+export function formatScore(score: Score, sides: Record<'w' | 'b', string> = { w: 'Чо', b: 'Хан' }): string {
   if (score.mate !== undefined) {
     const n = Math.abs(score.mate);
-    return `${score.mate > 0 ? 'Чо' : 'Хан'}: мат в ${n} ход${n === 1 ? '' : n < 5 ? 'а' : 'ов'}`;
+    return `${score.mate > 0 ? sides.w : sides.b}: мат в ${n} ход${n === 1 ? '' : n < 5 ? 'а' : 'ов'}`;
   }
   const v = (score.cp ?? 0) / 100;
   if (Math.abs(v) < 0.2) return 'Равная позиция';
-  return `${v > 0 ? 'Чо' : 'Хан'} +${Math.abs(v).toFixed(1).replace('.', ',')}`;
+  return `${v > 0 ? sides.w : sides.b} +${Math.abs(v).toFixed(1).replace('.', ',')}`;
 }

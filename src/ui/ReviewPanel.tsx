@@ -4,10 +4,9 @@ import { describePlan } from '../analysis/plan';
 import { accuracy, QUALITY_INFO, type Quality } from '../analysis/quality';
 import type { Game } from '../core/game';
 import { formatMove } from '../core/notation';
-import { toFen, type Color } from '../core/rules';
+import type { Color } from '../core/types';
 import { formatScore, scoreForCho } from '../engine/engine';
 import { EvalGraph } from './EvalGraph';
-import { SIDE_NAMES } from './pieces';
 
 export const REVIEW_DEPTHS = [
   { id: 'fast', ru: 'Быстро (глубина 12)', depth: 12 },
@@ -37,8 +36,9 @@ export function ReviewPanel({ game, reviews, evals, viewPly, progress, onSelect,
   const bySide = (c: Color) => all.filter((r) => r.mover === c);
   const ply = viewPly ?? n;
   const sel = ply > 0 ? reviews[ply] : undefined;
-  const fenBefore = ply > 0 ? toFen(ply === 1 ? game.start : game.history[ply - 2].pos) : null;
-  const betterPlan = sel && sel.quality !== 'best' && sel.before.pv.length && fenBefore ? describePlan(fenBefore, sel.before.pv) : null;
+  const v = game.variant;
+  const fenBefore = ply > 0 ? v.toFen(ply === 1 ? game.start : game.history[ply - 2].pos) : null;
+  const betterPlan = sel && sel.quality !== 'best' && sel.before.pv.length && fenBefore ? describePlan(fenBefore, sel.before.pv, 8, v) : null;
 
   return (
     <div className="panel review-panel">
@@ -86,8 +86,8 @@ export function ReviewPanel({ game, reviews, evals, viewPly, progress, onSelect,
           <thead>
             <tr>
               <th />
-              <th className="cho">Чо</th>
-              <th className="han">Хан</th>
+              <th className="cho">{v.sides.w}</th>
+              <th className="han">{v.sides.b}</th>
             </tr>
           </thead>
           <tbody>
@@ -130,13 +130,13 @@ export function ReviewPanel({ game, reviews, evals, viewPly, progress, onSelect,
         <div className="review-move">
           <div>
             <b>
-              {Math.ceil(sel.ply / 2)}. {SIDE_NAMES[sel.mover]}: {formatMove(game.history[sel.ply - 1])}
+              {Math.ceil(sel.ply / 2)}. {v.sides[sel.mover]}: {formatMove(game.history[sel.ply - 1], v)}
             </b>{' '}
             — <span style={{ color: QUALITY_INFO[sel.quality].color, fontWeight: 600 }}>{QUALITY_INFO[sel.quality].ru}</span>
             {sel.loss >= 1 && <span className="muted"> (−{Math.round(sel.loss)}% шансов)</span>}
           </div>
           <div className="muted small">
-            Оценка после хода: {sel.after.terminal ? 'партия окончена' : sel.after.score ? formatScore(scoreForCho(sel.after.score, sel.after.turn)) : '—'}
+            Оценка после хода: {sel.after.terminal ? 'партия окончена' : sel.after.score ? formatScore(scoreForCho(sel.after.score, sel.after.turn), v.sides) : '—'}
           </div>
           {betterPlan && (
             <div className="better">

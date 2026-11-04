@@ -1,6 +1,7 @@
-# Чанги — корейские шахматы
+# Чанги — корейские шахматы (а также Сянци и Сёги)
 
-Настольное приложение для игры в Чанги (장기) на русском языке. Работает на Windows, Linux и Android; установщики для всех трёх лежат в [Releases](https://github.com/poplar3/janggi-desktop/releases).
+Настольное приложение для игры в Чанги (장기), Сянци (象棋, китайские шахматы) и Сёги (将棋, японские шахматы)
+на русском языке. Игра выбирается переключателем в заголовке или в окне «Новая партия». Работает на Windows, Linux и Android; установщики для всех трёх лежат в [Releases](https://github.com/poplar3/janggi-desktop/releases).
 
 ## Возможности
 
@@ -30,6 +31,16 @@
   отметить ходы фигуры, найти ход, ответить на вопрос, решить задачи по теме, найти лучший ход в позиции из
   партии (ход оценивает движок).
 
+- **Сянци и Сёги** с тем же набором возможностей: игра с компьютером (10 уровней) и вдвоём, подсказки и анализ,
+  оценка ходов, разбор партии, правила, европейские иконки и иероглифы, задачи и курс обучения.
+  - Сянци: река, дворец, «летающий генерал», пат — поражение, вечный шах проигрывает, троекратное повторение и
+    50 ходов без взятий — ничья. Правило вечного преследования (AXF) не проверяется: такое повторение — ничья.
+  - Сёги: сброс взятых фигур из руки, превращение (с выбором в окне), нифу, мат сбросом пешки (утифудзумэ)
+    проигрывает поставившему его, четырёхкратное повторение (сэннититэ) — ничья, вечный шах проигрывает.
+  - Задачи генерируются движком так же, как для Чанги: маты в 1–5 ходов (в том числе цумэ, где каждый ход — шах)
+    и выигрыш материала: 190 задач Сянци и 233 задачи Сёги. Курсы обучения: 18 уроков Сянци и 15 уроков Сёги.
+  - Нейросеть движка есть только для Чанги; Сянци и Сёги движок играет с классической оценкой.
+
 В планах: задачи из других корейских сборников.
 
 ## Задачи
@@ -42,6 +53,15 @@ FAIRY_STOCKFISH=<путь> MODE=compose node scripts/gen-puzzles.mjs 12000 raw-c
 node scripts/select-puzzles.mjs raw-games.json raw-compose.json                        # отбор в src/puzzles/own.json
 FAIRY_STOCKFISH=<путь> MODE=bakbo node scripts/gen-puzzles.mjs 20000 raw-bakbo.json     # 박보: каждый ход — шах
 BAKBO=1 node scripts/select-puzzles.mjs raw-bakbo.json                                 # отбор в src/puzzles/bakbo.json
+```
+
+Для Сянци и Сёги — те же скрипты с переменной `VARIANT`; `MODE=checks` составляет маты, где каждый ход — шах:
+
+```bash
+FAIRY_STOCKFISH=<путь> VARIANT=shogi MODE=checks node scripts/gen-puzzles.mjs 30000 sh-checks.json
+FAIRY_STOCKFISH=<путь> VARIANT=shogi MODE=compose node scripts/gen-puzzles.mjs 10000 sh-compose.json
+FAIRY_STOCKFISH=<путь> VARIANT=shogi node scripts/gen-puzzles.mjs 40 sh-games.json
+VARIANT=shogi node scripts/select-puzzles.mjs sh-checks.json sh-compose.json sh-games.json  # в src/puzzles/shogi.json
 ```
 
 Задачи из «박보장기 1.0» переписаны с картинок прохождения в `scripts/data/bakbo-classic.json` и проверяются
@@ -61,7 +81,8 @@ FAIRY_STOCKFISH=<путь> MODE=defense node scripts/gen-lesson-tasks.mjs raw.js
 FAIRY_STOCKFISH=<путь> node scripts/verify-lessons.mjs                                     # проверка всех уроков
 ```
 
-`npm test` проверяет, что каждое решение законно и действительно заканчивается матом или выигрышем материала.
+Генерация ходов Сянци и Сёги сверяется с движком на тысячах позиций (`scripts/gen-movegen-fixtures.mjs`,
+четвёртый аргумент — вариант). `npm test` проверяет, что каждое решение законно и действительно заканчивается матом или выигрышем материала.
 
 ## Сборка
 
@@ -125,4 +146,4 @@ base64 -w0 janggi.jks   # содержимое — в секрет ANDROID_KEYST
 - Движок [Fairy-Stockfish](https://github.com/fairy-stockfish/Fairy-Stockfish) — GNU GPL v3; используется
   со встроенной нейросетью janggi-9991472750de из
   [Fairy-Stockfish-NNUE](https://github.com/fairy-stockfish/Fairy-Stockfish-NNUE).
-- Иероглифы фигур — подмножество шрифта Noto Serif KR, SIL Open Font License 1.1.
+- Иероглифы фигур — подмножества шрифтов Noto Serif KR, TC и JP, SIL Open Font License 1.1.
