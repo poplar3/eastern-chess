@@ -117,6 +117,10 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$KEYSTORE" ]; then
+            if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+              echo "::error::Релиз нельзя подписывать отладочным ключом: задайте секрет ANDROID_KEYSTORE_BASE64"
+              exit 1
+            fi
             echo "::notice::Секрет ANDROID_KEYSTORE_BASE64 не задан — APK подписан отладочным ключом"
             exit 0
           fi
@@ -140,6 +144,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: janggi-*
@@ -149,3 +154,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/**/*
+          # Описание релиза: release-notes/<тег>.md
+          body_path: release-notes/${{ github.ref_name }}.md
