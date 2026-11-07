@@ -1139,3 +1139,74 @@ body {
   gap: 1px;
   margin-right: 4px;
 }
+
+/* Подсказки «как запомнить иероглифы» */
+.mn-intro {
+  margin: 0 0 12px;
+}
+.mn-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mn-table th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--border);
+}
+.mn-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.mn-glyph {
+  width: 64px;
+}
+.mn-glyph .piece-icon {
+  display: block;
+}
+.mn-name {
+  font-weight: 600;
+  width: 22%;
+}
+.mn-look {
+  color: var(--muted);
+}
+/* На узком экране строка таблицы становится карточкой с подписями. */
+@media (max-width: 600px) {
+  .mn-table thead {
+    display: none;
+  }
+  .mn-table tr {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mn-table td {
+    border: none;
+    padding: 2px 0;
+  }
+  .mn-glyph {
+    grid-row: span 3;
+    width: auto;
+  }
+  .mn-name {
+    width: auto;
+  }
+  .mn-table td[data-label]::before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    color: var(--text);
+  }
+}
+.mn-foot {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.rules-mnemonics {
+  margin-bottom: 12px;
+}
