@@ -43,7 +43,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
       - run: npm ci
-      - name: Собрать движок Fairy-Stockfish с нейросетью Чанги
+      - name: Кеш нейросетей
+        uses: actions/cache@v4
+        with:
+          path: .nnue-cache
+          key: nnue-${{ hashFiles('scripts/nnue-nets.mjs') }}
+      - name: Собрать движок Fairy-Stockfish и скачать нейросети всех игр
         run: node scripts/fetch-engine.mjs --rebuild
       - name: Проверить движок
         run: node scripts/engine-smoke.mjs src-tauri/engine/fairy-stockfish
@@ -74,7 +79,12 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm ci
-      - name: Скачать движок Fairy-Stockfish (NNUE для Чанги)
+      - name: Кеш нейросетей
+        uses: actions/cache@v4
+        with:
+          path: .nnue-cache
+          key: nnue-${{ hashFiles('scripts/nnue-nets.mjs') }}
+      - name: Скачать движок Fairy-Stockfish и нейросети всех игр
         run: npm run fetch-engine
       - name: Проверить движок
         run: node scripts/engine-smoke.mjs src-tauri/engine/fairy-stockfish.exe
@@ -112,7 +122,12 @@ jobs:
           echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
       - run: npm ci
-      - name: Собрать движок Fairy-Stockfish для Android (NNUE для Чанги)
+      - name: Кеш нейросетей
+        uses: actions/cache@v4
+        with:
+          path: .nnue-cache
+          key: nnue-${{ hashFiles('scripts/nnue-nets.mjs') }}
+      - name: Собрать движок Fairy-Stockfish для Android и скачать нейросети всех игр
         run: npm run fetch-engine -- --android
       - name: Ключ подписи
         env:
