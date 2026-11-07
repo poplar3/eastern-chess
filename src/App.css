@@ -708,6 +708,121 @@ button.link {
   padding: 0;
 }
 
+/* ---------- Статистика ---------- */
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: #faf6ee;
+}
+.stat-num {
+  font-size: 24px;
+  font-weight: 700;
+}
+.st-win {
+  color: #1f8a4c;
+}
+.st-loss {
+  color: #a12b2b;
+}
+.stats-table-wrap {
+  overflow-x: auto;
+}
+.stats-table th {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+}
+.stats-table th:first-child {
+  text-align: left;
+}
+.stats-table tbody tr {
+  border-top: 1px solid var(--border);
+}
+.stats-sub td:first-child {
+  padding-left: 12px;
+}
+.game-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.game-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) 2fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 8px 4px 8px 10px;
+  border-top: 1px solid var(--border);
+  border-left: 4px solid transparent;
+}
+.game-row.game-win {
+  border-left-color: #1f8a4c;
+}
+.game-row.game-loss {
+  border-left-color: #a12b2b;
+}
+.game-row.game-draw {
+  border-left-color: #b88a1e;
+}
+.game-row > .small:last-child {
+  grid-column: 1 / -1;
+}
+.game-main {
+  display: flex;
+  flex-direction: column;
+}
+.game-result {
+  font-weight: 700;
+}
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+.game-meta span:empty {
+  display: none;
+}
+.game-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .stats-tiles {
+    grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+    gap: 6px;
+  }
+  .stat-tile {
+    padding: 6px 2px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 20px;
+  }
+  .game-row {
+    grid-template-columns: 1fr auto;
+  }
+  .game-meta {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
 /* ---------- Задачи ---------- */
 .topbar .btn.active {
   background: #5a4228;
