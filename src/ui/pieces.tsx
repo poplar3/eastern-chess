@@ -17,6 +17,13 @@ const INK: Record<GameId, Record<Color, string>> = {
   janggi: SIDE_COLORS,
   xiangqi: { w: '#b8231f', b: '#1f1f1f' },
   shogi: { w: '#1f1a14', b: '#1f1a14' },
+  makruk: { w: '#3a2a18', b: '#f3e3bf' },
+  shatranj: { w: '#3a2a18', b: '#f3e3bf' },
+};
+/** Иконки фигур макрука и шатранджа: тип → рисунок. */
+const CHESS8_ICON: Partial<Record<GameId, Record<string, string>>> = {
+  makruk: { K: 'K', M: 'A', S: 'SB', N: 'N', R: 'BOAT', P: 'P' },
+  shatranj: { K: 'K', Q: 'A', B: 'B', N: 'N', R: 'R', P: 'P' },
 };
 const SHOGI_PROMOTED_INK = '#b8231f';
 
@@ -32,11 +39,20 @@ const SHOGI_KANJI: Record<string, string> = {
   R: '飛', B: '角', G: '金', S: '銀', N: '桂', L: '香', P: '歩',
   '+R': '龍', '+B': '馬', '+S': '全', '+N': '圭', '+L': '杏', '+P': 'と',
 };
-const FONT_CLASS: Record<GameId, string> = { janggi: 'hanja', xiangqi: 'hanja-xq', shogi: 'hanja-sh' };
+/** Иероглиф, которым подписана фигура. */
+export function pieceGlyph(piece: Piece, game: GameId): string {
+  const c = colorOf(piece);
+  const t = typeOf(piece);
+  if (game === 'shogi') return t === 'K' ? (c === 'w' ? '玉' : '王') : SHOGI_KANJI[t];
+  return game === 'xiangqi' ? XIANGQI_HAN[c][t] : HANJA[c][t];
+}
+
+const FONT_CLASS: Record<GameId, string> = { janggi: 'hanja', xiangqi: 'hanja-xq', shogi: 'hanja-sh', makruk: '', shatranj: '' };
 
 /** Радиус фигуры Чанги при шаге сетки 64: генерал крупнее всех, страж и солдат — меньше. */
 export function pieceRadius(t: string, game: GameId = 'janggi'): number {
   if (game === 'xiangqi') return 27;
+  if (game === 'makruk' || game === 'shatranj') return 26;
   if (game === 'shogi') return shogiSize(t) * 30;
   return t === 'K' ? 30 : t === 'A' || t === 'P' ? 21 : 26;
 }
@@ -154,6 +170,16 @@ function icon(t: string, c: string, bg = IVORY): ReactNode {
           )}
         </g>
       );
+    case 'BOAT': // ладья макрука — лодка (руа)
+      return (
+        <g fill={c}>
+          <path d="M-27 6 H27 L18 21 H-18 Z" />
+          <path d="M-3 -27 V6" stroke={c} strokeWidth={4} />
+          <path d="M1 -25 L21 1 H1 Z" />
+          <path d="M-7 -19 L-22 1 H-7 Z" />
+          <path d="M-14 13 H14" stroke={bg} strokeWidth={2.5} strokeLinecap="round" />
+        </g>
+      );
     case 'SL': // стрелка — копьё
       return (
         <g fill={c}>
@@ -208,7 +234,7 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
     const promoted = t.startsWith('+');
     const ink = promoted ? SHOGI_PROMOTED_INK : INK.shogi[c];
     const upside = (c === 'b') !== flipped;
-    const label = t === 'K' ? (c === 'w' ? '玉' : '王') : SHOGI_KANJI[t];
+    const label = pieceGlyph(piece, 'shogi');
     return (
       <g transform={`translate(${x} ${y}) scale(${scale}) rotate(${upside ? 180 : 0})`} opacity={dim ? 0.45 : 1} className="piece">
         <polygon points={pentagon(s)} fill="rgba(0,0,0,0.25)" transform="translate(1.5 2.5)" />
@@ -230,7 +256,20 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
   }
   const r = pieceRadius(t, game);
   const color = INK[game][c];
-  const glyph = game === 'xiangqi' ? XIANGQI_HAN[c][t] : HANJA[c][t];
+  const chess8 = CHESS8_ICON[game];
+  if (chess8) {
+    // Макрук и шатрандж: круглые фишки, светлые у белых и тёмные у чёрных; иероглифов у этих игр нет.
+    const dark = c === 'b';
+    return (
+      <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={dim ? 0.45 : 1} className="piece">
+        <circle r={r + 1.5} fill="rgba(0,0,0,0.25)" transform="translate(1.5 2.5)" />
+        <circle r={r} fill={dark ? 'url(#pieceFillDark)' : 'url(#pieceFill)'} stroke={dark ? '#120c06' : '#5b3a17'} strokeWidth={2} />
+        <circle r={r - 4} fill="none" stroke={dark ? '#f3e3bf' : '#5b3a17'} strokeOpacity={0.3} strokeWidth={1} />
+        <g transform={`scale(${(r * 0.74) / 30})`}>{icon(chess8[t] ?? t, color, dark ? '#2b2118' : IVORY)}</g>
+      </g>
+    );
+  }
+  const glyph = pieceGlyph(piece, game);
   return (
     <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={dim ? 0.45 : 1} className="piece">
       {game === 'xiangqi' ? (
@@ -275,6 +314,11 @@ export function PieceDefs() {
         <stop offset="0%" stopColor="#fffaf0" />
         <stop offset="70%" stopColor="#f3e3bf" />
         <stop offset="100%" stopColor="#dcc597" />
+      </radialGradient>
+      <radialGradient id="pieceFillDark" cx="40%" cy="35%" r="75%">
+        <stop offset="0%" stopColor="#5a4632" />
+        <stop offset="70%" stopColor="#2f2318" />
+        <stop offset="100%" stopColor="#1c140c" />
       </radialGradient>
       <linearGradient id="shogiFill" x1="0" y1="0" x2="0.4" y2="1">
         <stop offset="0%" stopColor="#f8e2ad" />

@@ -16,8 +16,12 @@ import { PuzzlesView } from './ui/PuzzlesView';
 import { TrainingView } from './ui/TrainingView';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
+import { MnemonicsDialog } from './ui/MnemonicsDialog';
+import { markMnemonicsSeen, MNEMONICS, mnemonicsSeen } from './ui/mnemonics';
 import { ScorePanel } from './ui/ScorePanel';
 import { useMoveInput } from './ui/moveInput';
+import { allPuzzles } from './puzzles';
+import { lessonsFor } from './training';
 import './App.css';
 
 /** Непрерывный анализ: варианты показываются не мельче этой глубины и не чаще, чем раз в столько мс. */
@@ -51,6 +55,10 @@ export default function App() {
   const [flipped, setFlipped] = useState(config.mode === 'bot' && config.humanColor === 'b');
   const [showNewGame, setShowNewGame] = useState(!DEV_FEN);
   const [showRules, setShowRules] = useState(false);
+  /** Подсказки по иероглифам: сами открываются в первой партии с иероглифами в каждой игре. */
+  const [showMnemonics, setShowMnemonics] = useState(
+    () => !DEV_FEN && config.pieceStyle === 'hanja' && !mnemonicsSeen(config.variant),
+  );
   const [view, setView] = useState<'game' | 'puzzles' | 'training'>(() => {
     const v = DEV_PARAMS?.get('view');
     return v === 'puzzles' || v === 'training' ? v : 'game';
@@ -287,7 +295,13 @@ export default function App() {
     setViewPly(null);
     setReviewOpen(false);
     setReviewProgress(null);
+    setShowMnemonics(c.pieceStyle === 'hanja' && !mnemonicsSeen(c.variant));
     bump();
+  };
+
+  const closeMnemonics = () => {
+    markMnemonicsSeen(shownVariant.id);
+    setShowMnemonics(false);
   };
 
   const resign = () => {
@@ -423,7 +437,26 @@ export default function App() {
         </nav>
       </header>
 
-      {view === 'puzzles' && (
+      {view !== 'game' && (view === 'puzzles' ? allPuzzles(shownVariant.id) : lessonsFor(shownVariant.id)).length === 0 && (
+        <main className="layout">
+          <div className="panel coming-soon">
+            <h2>{view === 'puzzles' ? 'Задачи' : 'Обучение'}: {shownVariant.name}</h2>
+            <p>
+              {view === 'puzzles' ? 'Задачи' : 'Уроки'} для этой игры появятся в следующих версиях. Пока можно прочитать правила и
+              сыграть с компьютером: подсказки и разбор партии уже работают.
+            </p>
+            <div className="controls">
+              <button className="btn" onClick={() => setShowRules(true)}>
+                Правила
+              </button>
+              <button className="btn primary" onClick={() => setShowNewGame(true)}>
+                Новая партия
+              </button>
+            </div>
+          </div>
+        </main>
+      )}
+      {view === 'puzzles' && allPuzzles(shownVariant.id).length > 0 && (
         <PuzzlesView
           key={shownVariant.id}
           variant={shownVariant}
@@ -431,7 +464,7 @@ export default function App() {
           onPlayFrom={(fen, human) => startGame({ ...config, variant: shownVariant.id, mode: 'bot', humanColor: human }, fen)}
         />
       )}
-      {view === 'training' && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
+      {view === 'training' && lessonsFor(shownVariant.id).length > 0 && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
       {view === 'game' && (
       <main className="layout">
         <div className="board-area">
@@ -558,7 +591,22 @@ export default function App() {
           }
         />
       )}
-      {showRules && <RulesDialog variant={shownVariant} style={config.pieceStyle} onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <RulesDialog
+          variant={shownVariant}
+          style={config.pieceStyle}
+          onClose={() => setShowRules(false)}
+          onMnemonics={
+            MNEMONICS[shownVariant.id]
+              ? () => {
+                  setShowRules(false);
+                  setShowMnemonics(true);
+                }
+              : undefined
+          }
+        />
+      )}
+      {showMnemonics && !showNewGame && MNEMONICS[shownVariant.id] && <MnemonicsDialog variant={shownVariant} onClose={closeMnemonics} />}
       {result && !resultClosed && view === 'game' && (
         <Modal
           title="Партия окончена"
@@ -580,7 +628,7 @@ export default function App() {
           {result.winner ? (
             <p className="result-line">
               Победа: <b className={result.winner === 'w' ? 'cho' : 'han'}>{variant.sides[result.winner]}</b>
-              {result.reason === 'resign' && ` — ${variant.sides[opposite(result.winner)]} ${variant.id === 'xiangqi' ? 'сдались' : 'сдался'}`}
+              {result.reason === 'resign' && ` — ${variant.sides[opposite(result.winner)]} ${variant.pluralSides ? 'сдались' : 'сдался'}`}
             </p>
           ) : (
             <p className="result-line">
