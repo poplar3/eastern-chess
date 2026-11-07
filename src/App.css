@@ -1139,3 +1139,46 @@ body {
   gap: 1px;
   margin-right: 4px;
 }
+
+/* Подсказки «как запомнить иероглифы» */
+.mn-intro {
+  margin: 0 0 12px;
+}
+.mn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 10px;
+}
+.mn-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.mn-card .piece-icon {
+  flex: none;
+}
+.mn-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.mn-look {
+  color: var(--muted);
+  font-size: 14px;
+}
+.mn-hook {
+  margin-top: 4px;
+}
+.mn-foot {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.rules-mnemonics {
+  margin-bottom: 12px;
+}
