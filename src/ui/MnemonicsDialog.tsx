@@ -6,6 +6,7 @@ import { PieceIcon } from './pieces';
 /** Подсказки, как запомнить иероглифы фигур. */
 export function MnemonicsDialog({ variant, onClose }: { variant: Variant; onClose: () => void }) {
   const set = MNEMONICS[variant.id];
+  if (!set) return null;
   return (
     <Modal
       title={`Как запомнить иероглифы: ${variant.name}`}

@@ -11,6 +11,7 @@ export { XIANGQI_LESSONS } from './lessonsXiangqi';
 
 /** Курс обучения для игры. */
 export function lessonsFor(game: GameId): Lesson[] {
+  if (game === 'makruk' || game === 'shatranj') return [];
   return game === 'xiangqi' ? XIANGQI_LESSONS : game === 'shogi' ? SHOGI_LESSONS : LESSONS;
 }
 export type { ConcreteTask, Diagram, Lesson, TheoryBlock } from './types';

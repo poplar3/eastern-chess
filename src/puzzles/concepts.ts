@@ -282,7 +282,7 @@ const SHOGI_CONCEPTS: Partial<Record<ConceptId, Concept>> = {
   },
 };
 
-const BY_GAME: Record<GameId, Partial<Record<ConceptId, Concept>>> = { janggi: {}, xiangqi: XIANGQI_CONCEPTS, shogi: SHOGI_CONCEPTS };
+const BY_GAME: Record<GameId, Partial<Record<ConceptId, Concept>>> = { janggi: {}, xiangqi: XIANGQI_CONCEPTS, shogi: SHOGI_CONCEPTS, makruk: {}, shatranj: {} };
 
 /** Описания приёмов для этой игры. */
 export function conceptsFor(game: GameId): Record<ConceptId, Concept> {

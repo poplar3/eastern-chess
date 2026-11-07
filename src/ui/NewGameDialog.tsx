@@ -55,8 +55,9 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
     onStart(janggi ? { ...c, [setupKey(botColor)]: randomSetup() } : c);
   };
   const preview = variant.id === 'shogi' ? ['R', 'B', '+P', 'k'] : ['R', 'N', 'C', 'k'];
+  const chess8Preview = variant.id === 'makruk' ? ['R', 'S', 'M', 'k'] : ['R', 'B', 'Q', 'k'];
   const sideNote = (col: Color) =>
-    janggi ? (col === 'w' ? ' (ходит первым)' : ' (+1,5 очка)') : col === 'w' ? (variant.id === 'xiangqi' ? ' (ходят первыми)' : ' (ходит первым)') : '';
+    janggi ? (col === 'w' ? ' (ходит первым)' : ' (+1,5 очка)') : col === 'w' ? (variant.pluralSides ? ' (ходят первыми)' : ' (ходит первым)') : '';
 
   let body: ReactNode;
   let footer: ReactNode;
@@ -81,6 +82,7 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
           </div>
         </div>
 
+        {variant.hasGlyphs ? (
         <div className="field">
           <label>Вид фигур</label>
           <div className="segmented">
@@ -94,6 +96,15 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
             ))}
           </div>
         </div>
+        ) : (
+          <div className="field">
+            <label>Фигуры</label>
+            <div className="style-preview">
+              {chess8Preview.map((p) => <PieceIcon key={p} piece={p} style={c.pieceStyle} size={34} game={variant.id} />)}
+            </div>
+            <p className="hint">У этой игры нет иероглифов: фигуры показаны рисунками, белые светлые, чёрные тёмные.</p>
+          </div>
+        )}
 
         <div className="field">
           <label>Соперник</label>
@@ -139,7 +150,7 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
                   'Уровни идут от новичка (18 кып) до полной силы движка. Корейские разряды: кып — ученические, от 18 до 1; дан — мастерские. Elo приблизительный.'}
                 {variant.id === 'shogi' &&
                   'Уровни идут от новичка (15 кю) до полной силы движка. Разряды сёги: кю — ученические, дан — мастерские. Соответствие разрядам и Elo приблизительное.'}
-                {variant.id === 'xiangqi' && 'Уровни идут от новичка до полной силы движка. Elo приблизительный.'}
+                {variant.id !== 'janggi' && variant.id !== 'shogi' && 'Уровни идут от новичка до полной силы движка. Elo приблизительный.'}
               </p>
             </div>
             {janggi && (

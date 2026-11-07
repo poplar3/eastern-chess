@@ -17,9 +17,11 @@ import { TrainingView } from './ui/TrainingView';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
 import { MnemonicsDialog } from './ui/MnemonicsDialog';
-import { markMnemonicsSeen, mnemonicsSeen } from './ui/mnemonics';
+import { markMnemonicsSeen, MNEMONICS, mnemonicsSeen } from './ui/mnemonics';
 import { ScorePanel } from './ui/ScorePanel';
 import { useMoveInput } from './ui/moveInput';
+import { allPuzzles } from './puzzles';
+import { lessonsFor } from './training';
 import './App.css';
 
 /** Непрерывный анализ: варианты показываются не мельче этой глубины и не чаще, чем раз в столько мс. */
@@ -435,7 +437,26 @@ export default function App() {
         </nav>
       </header>
 
-      {view === 'puzzles' && (
+      {view !== 'game' && (view === 'puzzles' ? allPuzzles(shownVariant.id) : lessonsFor(shownVariant.id)).length === 0 && (
+        <main className="layout">
+          <div className="panel coming-soon">
+            <h2>{view === 'puzzles' ? 'Задачи' : 'Обучение'}: {shownVariant.name}</h2>
+            <p>
+              {view === 'puzzles' ? 'Задачи' : 'Уроки'} для этой игры появятся в следующих версиях. Пока можно прочитать правила и
+              сыграть с компьютером: подсказки и разбор партии уже работают.
+            </p>
+            <div className="controls">
+              <button className="btn" onClick={() => setShowRules(true)}>
+                Правила
+              </button>
+              <button className="btn primary" onClick={() => setShowNewGame(true)}>
+                Новая партия
+              </button>
+            </div>
+          </div>
+        </main>
+      )}
+      {view === 'puzzles' && allPuzzles(shownVariant.id).length > 0 && (
         <PuzzlesView
           key={shownVariant.id}
           variant={shownVariant}
@@ -443,7 +464,7 @@ export default function App() {
           onPlayFrom={(fen, human) => startGame({ ...config, variant: shownVariant.id, mode: 'bot', humanColor: human }, fen)}
         />
       )}
-      {view === 'training' && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
+      {view === 'training' && lessonsFor(shownVariant.id).length > 0 && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
       {view === 'game' && (
       <main className="layout">
         <div className="board-area">
@@ -575,13 +596,17 @@ export default function App() {
           variant={shownVariant}
           style={config.pieceStyle}
           onClose={() => setShowRules(false)}
-          onMnemonics={() => {
-            setShowRules(false);
-            setShowMnemonics(true);
-          }}
+          onMnemonics={
+            MNEMONICS[shownVariant.id]
+              ? () => {
+                  setShowRules(false);
+                  setShowMnemonics(true);
+                }
+              : undefined
+          }
         />
       )}
-      {showMnemonics && !showNewGame && <MnemonicsDialog variant={shownVariant} onClose={closeMnemonics} />}
+      {showMnemonics && !showNewGame && MNEMONICS[shownVariant.id] && <MnemonicsDialog variant={shownVariant} onClose={closeMnemonics} />}
       {result && !resultClosed && view === 'game' && (
         <Modal
           title="Партия окончена"
@@ -603,7 +628,7 @@ export default function App() {
           {result.winner ? (
             <p className="result-line">
               Победа: <b className={result.winner === 'w' ? 'cho' : 'han'}>{variant.sides[result.winner]}</b>
-              {result.reason === 'resign' && ` — ${variant.sides[opposite(result.winner)]} ${variant.id === 'xiangqi' ? 'сдались' : 'сдался'}`}
+              {result.reason === 'resign' && ` — ${variant.sides[opposite(result.winner)]} ${variant.pluralSides ? 'сдались' : 'сдался'}`}
             </p>
           ) : (
             <p className="result-line">
