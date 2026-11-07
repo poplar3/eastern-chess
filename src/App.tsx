@@ -7,7 +7,7 @@ import { autoSetupMove, inSetup } from './core/sittuyin';
 import { isPass, opposite, type Color, type GameId, type Move } from './core/types';
 import { EXTRA_GAME_IDS, getVariant, MAIN_GAME_IDS, VARIANTS } from './core/variants';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
-import { loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig } from './settings';
+import { applyTheme, effectiveTheme, loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig, type Theme } from './settings';
 import { AiPanel, ARROW_COLORS, REPLY_COLOR, type EngineStatus, type ShownLines } from './ui/AiPanel';
 import { Board, type Arrow } from './ui/Board';
 import { Modal } from './ui/Modal';
@@ -27,6 +27,7 @@ import { useMoveInput } from './ui/moveInput';
 import { allPuzzles } from './puzzles';
 import { lessonsFor } from './training';
 import './App.css';
+import './theme-dark.css';
 
 /** Непрерывный анализ: варианты показываются не мельче этой глубины и не чаще, чем раз в столько мс. */
 const ANALYSIS_MIN_DEPTH = 10;
@@ -447,6 +448,23 @@ export default function App() {
     savePrefs(p);
   };
 
+  // Ночной режим: тема на <html>; «как в системе» следит за сменой системной темы.
+  useEffect(() => {
+    applyTheme(prefs.theme);
+    if (prefs.theme !== 'system' || typeof matchMedia === 'undefined') return;
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const on = () => applyTheme('system');
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, [prefs.theme]);
+  const THEME_NEXT: Record<Theme, Theme> = { system: 'dark', dark: 'light', light: 'system' };
+  const THEME_LABEL: Record<Theme, string> = { system: 'как в системе', dark: 'ночная', light: 'дневная' };
+  const cycleTheme = () => {
+    const p = { ...prefs, theme: THEME_NEXT[prefs.theme] };
+    setPrefs(p);
+    savePrefs(p);
+  };
+
   // Листание ходов стрелками
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -576,6 +594,14 @@ export default function App() {
           </button>
           <button className={`btn${view === 'history' ? ' active' : ''}`} onClick={() => setView('history')}>
             История
+          </button>
+          <button
+            className="btn theme-toggle"
+            onClick={cycleTheme}
+            title={`Тема: ${THEME_LABEL[prefs.theme]}. Нажмите, чтобы сменить`}
+            aria-label={`Тема: ${THEME_LABEL[prefs.theme]}`}
+          >
+            {prefs.theme === 'system' ? '◐' : effectiveTheme(prefs.theme) === 'dark' ? '☾' : '☀'}
           </button>
         </nav>
       </header>
