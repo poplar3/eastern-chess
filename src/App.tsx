@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Evaluator, gameAtPly, HINT_DEPTH, LIVE_DEPTH, MULTIPV, type MoveReview } from './analysis/evaluator';
-import { cpForCho, winPercent } from './analysis/quality';
+import { accuracy, cpForCho, winPercent } from './analysis/quality';
 import { endReasonText, Game } from './core/game';
-import { setupName, startFenWithSetups } from './core/rules';
-import { isPass, opposite, type GameId, type Move } from './core/types';
+import { setupName, startFenWithSetups, type Setup } from './core/rules';
+import { isPass, opposite, type Color, type GameId, type Move } from './core/types';
 import { GAME_IDS, getVariant, VARIANTS } from './core/variants';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
 import { loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig } from './settings';
@@ -14,6 +14,8 @@ import { MoveList } from './ui/MoveList';
 import { NewGameDialog } from './ui/NewGameDialog';
 import { PuzzlesView } from './ui/PuzzlesView';
 import { TrainingView } from './ui/TrainingView';
+import { StatsView } from './ui/StatsView';
+import { newRecordId, patchRecord, putRecord, type GameRecord } from './history/store';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
 import { ScorePanel } from './ui/ScorePanel';
@@ -51,11 +53,17 @@ export default function App() {
   const [flipped, setFlipped] = useState(config.mode === 'bot' && config.humanColor === 'b');
   const [showNewGame, setShowNewGame] = useState(!DEV_FEN);
   const [showRules, setShowRules] = useState(false);
-  const [view, setView] = useState<'game' | 'puzzles' | 'training'>(() => {
+  const [view, setView] = useState<'game' | 'puzzles' | 'training' | 'stats'>(() => {
     const v = DEV_PARAMS?.get('view');
-    return v === 'puzzles' || v === 'training' ? v : 'game';
+    return v === 'puzzles' || v === 'training' || v === 'stats' ? v : 'game';
   });
   const [resultClosed, setResultClosed] = useState(false);
+
+  // Журнал партий: id записи текущей партии и что уже записано.
+  const recordId = useRef(newRecordId());
+  const recordedKey = useRef('');
+  /** Партия открыта из журнала (тогда её настройки не трогают сохранённые настройки новой партии). */
+  const [openedRecord, setOpenedRecord] = useState(false);
 
   const [engineStatus, setEngineStatus] = useState<EngineStatus>({ state: 'loading' });
   const [analysisOn, setAnalysisOn] = useState(false);
@@ -79,6 +87,49 @@ export default function App() {
   const botTurn = config.mode === 'bot' && game.turn !== config.humanColor && !result;
   const viewing = viewPly !== null && viewPly !== game.history.length;
   const humanCanMove = !result && !botTurn && !viewing && !reviewing;
+
+  // Завершённая партия попадает в журнал; та же партия после отмены хода и нового окончания перезаписывается.
+  useEffect(() => {
+    const g = gameRef.current;
+    const r = g.result();
+    if (!r || !g.history.length) return;
+    const key = `${g.uciMoves.join(' ')}|${r.reason}|${r.winner}`;
+    if (recordedKey.current === key) return;
+    recordedKey.current = key;
+    const custom = !fromSetups && g.startFen !== g.variant.startFen;
+    putRecord({
+      v: 1,
+      id: recordId.current,
+      game: g.variant.id,
+      gameName: g.variant.name,
+      mode: config.mode,
+      humanColor: config.mode === 'bot' ? config.humanColor : undefined,
+      level: config.mode === 'bot' ? config.level : undefined,
+      levelName: config.mode === 'bot' ? BOT_LEVELS.find((l) => l.id === config.level)?.name : undefined,
+      custom: custom || undefined,
+      setups: fromSetups && g.variant.id === 'janggi' ? { w: config.choSetup, b: config.hanSetup } : undefined,
+      startFen: g.startFen,
+      moves: g.uciMoves,
+      result: { winner: r.winner, reason: r.reason },
+      endedAt: Date.now(),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
+
+  // Когда разобраны все ходы завершённой партии, точность сохраняется в журнал.
+  useEffect(() => {
+    const g = gameRef.current;
+    const n = g.history.length;
+    if (reviewing || !n || !g.result() || !recordedKey.current) return;
+    const all = Array.from({ length: n }, (_, i) => reviews[i + 1]);
+    if (all.some((r) => !r)) return;
+    const acc: Partial<Record<Color, number>> = {};
+    for (const c of ['w', 'b'] as const) {
+      const a = accuracy(all.filter((r) => r.mover === c).map((r) => r.loss));
+      if (a !== null) acc[c] = Math.round(a * 10) / 10;
+    }
+    patchRecord(recordId.current, { accuracy: acc, accuracyDepth: Math.min(...all.map((r) => r.before.depth)) });
+  }, [reviews, reviewing]);
 
   useEffect(() => {
     engine
@@ -263,6 +314,12 @@ export default function App() {
       while (game.history.length && game.turn !== config.humanColor) game.undo();
     } else game.undo();
     dropReviewsAfter(game.history.length);
+    if (openedRecord) {
+      // Партию из журнала продолжили — это уже новая партия, старую запись не трогаем.
+      recordId.current = newRecordId();
+      recordedKey.current = '';
+      setOpenedRecord(false);
+    }
     input.clear();
     setViewPly(null);
     setResultClosed(false);
@@ -287,7 +344,54 @@ export default function App() {
     setViewPly(null);
     setReviewOpen(false);
     setReviewProgress(null);
+    recordId.current = newRecordId();
+    recordedKey.current = '';
+    setOpenedRecord(false);
     bump();
+  };
+
+  /** Открывает партию из журнала на доске с панелью разбора. */
+  const openRecord = (r: GameRecord): boolean => {
+    const v = (VARIANTS as Record<string, (typeof VARIANTS)[GameId] | undefined>)[r.game];
+    if (!v) return false;
+    const g = new Game(r.startFen, v);
+    try {
+      for (const m of r.moves) g.playUci(m);
+    } catch {
+      return false;
+    }
+    if (r.result.reason === 'resign' && r.result.winner) g.resign(opposite(r.result.winner));
+    token.current++;
+    engine.stop();
+    const c: GameConfig = {
+      ...config,
+      variant: v.id,
+      mode: r.mode,
+      humanColor: r.humanColor ?? 'w',
+      level: r.level ?? config.level,
+      choSetup: (r.setups?.w as Setup) ?? config.choSetup,
+      hanSetup: (r.setups?.b as Setup) ?? config.hanSetup,
+    };
+    setConfig(c);
+    gameRef.current = g;
+    recordId.current = r.id;
+    const res = g.result();
+    recordedKey.current = res ? `${g.uciMoves.join(' ')}|${res.reason}|${res.winner}` : '';
+    setOpenedRecord(true);
+    setFromSetups(!!r.setups && !r.custom);
+    setView('game');
+    setFlipped(c.mode === 'bot' && c.humanColor === 'b');
+    input.clear();
+    setShowNewGame(false);
+    setDialogVariant(null);
+    setResultClosed(true);
+    setLines(null);
+    setReviews({});
+    setViewPly(0);
+    setReviewOpen(true);
+    setReviewProgress(null);
+    bump();
+    return true;
   };
 
   const resign = () => {
@@ -382,9 +486,9 @@ export default function App() {
       setDialogVariant(id);
       setShowNewGame(true);
     } else {
-      const c = { ...config, variant: id };
-      setConfig(c);
-      saveConfig(c);
+      setConfig({ ...config, variant: id });
+      // Настройки партии из журнала не должны попасть в сохранённые настройки новой партии.
+      saveConfig({ ...(openedRecord ? loadConfig() : config), variant: id });
     }
   };
 
@@ -420,6 +524,9 @@ export default function App() {
           <button className={`btn${view === 'training' ? ' active' : ''}`} onClick={() => setView('training')}>
             Обучение
           </button>
+          <button className={`btn${view === 'stats' ? ' active' : ''}`} onClick={() => setView('stats')}>
+            Статистика
+          </button>
         </nav>
       </header>
 
@@ -432,6 +539,7 @@ export default function App() {
         />
       )}
       {view === 'training' && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
+      {view === 'stats' && <StatsView variant={shownVariant} onOpen={openRecord} />}
       {view === 'game' && (
       <main className="layout">
         <div className="board-area">
@@ -546,7 +654,7 @@ export default function App() {
       {showNewGame && (
         <NewGameDialog
           key={dialogVariant ?? 'current'}
-          initial={{ ...config, variant: dialogVariant ?? (view === 'game' ? variant.id : config.variant) }}
+          initial={{ ...(openedRecord ? loadConfig() : config), variant: dialogVariant ?? (view === 'game' ? variant.id : config.variant) }}
           onStart={startGame}
           onClose={
             n || version > 0
