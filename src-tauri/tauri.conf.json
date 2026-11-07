@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Janggi",
+  "productName": "Eastern Chess",
   "mainBinaryName": "janggi",
   "version": "0.3.0",
   "identifier": "io.github.poplar3.janggi",
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "Чанги — корейские шахматы",
+        "title": "Восточные шахматы",
         "width": 1280,
         "height": 860,
         "minWidth": 1024,
@@ -32,8 +32,8 @@
     "publisher": "poplar3",
     "copyright": "GPL-3.0",
     "category": "BoardGame",
-    "shortDescription": "Чанги — корейские шахматы",
-    "longDescription": "Игра в Чанги (корейские шахматы) с ИИ на основе Fairy-Stockfish, подсказками и анализом.",
+    "shortDescription": "Восточные шахматы: чанги, сянци, сёги",
+    "longDescription": "Восточные шахматы: Чанги (корейские), Сянци (китайские) и Сёги (японские) с ИИ на основе Fairy-Stockfish, подсказками и анализом.",
     "license": "GPL-3.0",
     "licenseFile": "../LICENSE",
     "icon": [
@@ -47,7 +47,8 @@
       "nsis": {
         "languages": ["Russian", "English"],
         "displayLanguageSelector": false,
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsh"
       },
       "wix": {
         "language": "ru-RU"
