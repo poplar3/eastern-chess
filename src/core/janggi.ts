@@ -60,6 +60,8 @@ function result(start: Position, history: HistoryEntry[]) {
 
 export const JANGGI: Variant = {
   id: 'janggi',
+  family: 'janggi',
+  group: 'main',
   engine: 'janggi',
   name: 'Чанги',
   subtitle: 'корейские шахматы',

@@ -13,6 +13,11 @@ const TYPES: Record<GameId, string[]> = {
   shogi: Object.keys(SHOGI_PIECES),
   makruk: [],
   shatranj: [],
+  cambodian: [],
+  sittuyin: [],
+  minishogi: [],
+  kyotoshogi: [],
+  manchu: [],
 };
 
 describe('подсказки по иероглифам', () => {

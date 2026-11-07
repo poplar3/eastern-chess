@@ -55,6 +55,11 @@ const LEVELS_BY_GAME: Record<GameId, Level[]> = {
   xiangqi: STRENGTH_LEVELS,
   makruk: STRENGTH_LEVELS,
   shatranj: STRENGTH_LEVELS,
+  cambodian: STRENGTH_LEVELS,
+  sittuyin: STRENGTH_LEVELS,
+  minishogi: STRENGTH_LEVELS,
+  kyotoshogi: STRENGTH_LEVELS,
+  manchu: STRENGTH_LEVELS,
   shogi: [
     { n: 1, ru: 'Начальный', rank: '15–10 кю' },
     { n: 2, ru: 'Новичок', rank: '9–6 кю' },
@@ -85,6 +90,11 @@ const MATE_BY_PIECE: Record<GameId, Record<string, ConceptId>> = {
   xiangqi: { R: 'mate-chariot', C: 'mate-cannon', N: 'mate-horse', P: 'mate-soldier' },
   makruk: {},
   shatranj: {},
+  cambodian: {},
+  sittuyin: {},
+  minishogi: {},
+  kyotoshogi: {},
+  manchu: {},
   shogi: {
     R: 'mate-rook', '+R': 'mate-rook', B: 'mate-bishop', '+B': 'mate-bishop',
     G: 'mate-gold', '+P': 'mate-gold', '+L': 'mate-gold', '+N': 'mate-gold', '+S': 'mate-gold',

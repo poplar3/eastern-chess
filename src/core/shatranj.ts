@@ -66,6 +66,8 @@ function result(start: Position, history: HistoryEntry[]): GameResult | null {
 
 export const SHATRANJ: Variant = {
   id: 'shatranj',
+  family: 'chess8',
+  group: 'main',
   engine: 'shatranj',
   name: 'Шатрандж',
   subtitle: 'персидские шахматы',

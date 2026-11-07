@@ -34,8 +34,8 @@ const sortPuzzles = (list: Puzzle[]) =>
 export function allPuzzles(game: GameId = 'janggi'): Puzzle[] {
   const hit = cache[game];
   if (hit) return hit;
-  // Для макрука и шатранджа задач пока нет.
-  if (game === 'makruk' || game === 'shatranj') return (cache[game] = []);
+  // Задачи есть только для Чанги, Сянци и Сёги.
+  if (game !== 'janggi' && game !== 'xiangqi' && game !== 'shogi') return (cache[game] = []);
   if (game !== 'janggi') {
     const v = getVariant(game);
     const raw = (game === 'xiangqi' ? xiangqi : shogi) as (PuzzleData & { origin: string })[];

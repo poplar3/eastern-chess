@@ -1,6 +1,15 @@
-// Общая основа для игр на доске 8×8 в клетках: Макрук (тайские шахматы) и Шатрандж (старинные персидские).
-// Фигуры записываются буквами Fairy-Stockfish: в макруке S — кхон, M — мет; в шатрандже Q — ферзь, B — слон (альфиль).
+// Общая основа для игр на доске 8×8 в клетках: Макрук (тайские шахматы), Шатрандж (старинные персидские),
+// камбоджийские шахматы (ок) и Ситтуйин (бирманские).
+// Фигуры записываются буквами Fairy-Stockfish: в макруке S — кхон, M — мет; в шатрандже Q — ферзь, B — слон (альфиль);
+// в ситтуйине F — генерал (сит-ке).
 // Рокировки и двойного хода пешки нет; пешка, дойдя до зоны превращения, обязательно превращается.
+// Особые правила:
+// - камбоджийские: король, пока не ходил и не получал шаха от ладьи, может первым ходом прыгнуть конём
+//   на соседнюю горизонталь (без взятия и не из-под шаха), а мет, пока не ходил, — на две клетки вперёд без взятия;
+// - ситтуйин: игроки сначала по очереди расставляют фигуры из руки в своей половине доски (ладьи — только на
+//   первую горизонталь), пешка превращается в генерала не обязательно и только если генерала нет: стоя на диагонали
+//   превращения (последняя пешка — где угодно), на месте или шагом по диагонали на свободное поле; новый генерал
+//   не должен нападать на фигуры соперника, а сам ход — давать шах.
 import {
   colorOf,
   opposite,
@@ -9,6 +18,7 @@ import {
   type Board,
   type Color,
   type GameResult,
+  type Hand,
   type HistoryEntry,
   type Move,
   type Piece,
@@ -45,6 +55,19 @@ export interface Chess8Rules {
   /** Во что превращается пешка. */
   promoTo: string;
   pieces: Record<string, PieceInfo>;
+  /** Камбоджийские особые первые ходы короля и мета. */
+  cambodian?: boolean;
+  /** Ситтуйин: расстановка из руки и превращение по диагонали. */
+  sittuyin?: boolean;
+}
+
+/** Порядок фигур в руке ситтуйина. */
+export const SITTUYIN_HAND = ['K', 'F', 'R', 'S', 'N'] as const;
+
+/** Поле превращения ситтуйина на вертикали f для стороны c: большие диагонали в половине соперника. */
+export function sittuyinPromoRank(f: number, c: Color) {
+  const r = f < 4 ? SIZE - 1 - f : f;
+  return c === 'w' ? r : SIZE - 1 - r;
 }
 
 // ---------- FEN ----------
@@ -52,7 +75,14 @@ export interface Chess8Rules {
 export function makeFen(rules: Chess8Rules) {
   function parseFen(fen: string): Position {
     const parts = fen.trim().split(/\s+/);
-    const rows = parts[0].split('/');
+    let placement = parts[0];
+    let handStr = '';
+    const br = /\[([^\]]*)\]$/.exec(placement);
+    if (br) {
+      handStr = br[1];
+      placement = placement.slice(0, br.index);
+    }
+    const rows = placement.split('/');
     if (rows.length !== SIZE) throw new Error('FEN: должно быть 8 рядов');
     const board: Board = new Array(SIZE * SIZE).fill(null);
     rows.forEach((row, i) => {
@@ -75,7 +105,31 @@ export function makeFen(rules: Chess8Rules) {
     const nums = parts.slice(2).filter((x) => /^\d+$/.test(x));
     const half = nums.length >= 2 ? parseInt(nums[nums.length - 2], 10) : 0;
     const full = nums.length >= 1 ? parseInt(nums[nums.length - 1], 10) : 1;
-    return { board, turn, halfmove: half || 0, fullmove: full || 1 };
+    const pos: Position = { board, turn, halfmove: half || 0, fullmove: full || 1 };
+    if (rules.sittuyin) {
+      const hands: Record<Color, Hand> = { w: {}, b: {} };
+      const re = /(\d*)([a-zA-Z])/g;
+      let t: RegExpExecArray | null;
+      while ((t = re.exec(handStr))) {
+        const c: Color = t[2] === t[2].toUpperCase() ? 'w' : 'b';
+        const k = t[2].toUpperCase();
+        hands[c][k] = (hands[c][k] ?? 0) + (t[1] ? parseInt(t[1], 10) : 1);
+      }
+      pos.hands = hands;
+    }
+    if (rules.cambodian) {
+      // Права на особый ход записаны в поле рокировки буквами вертикалей: «DEde».
+      const gates: number[] = [];
+      for (const ch of /^[A-Za-z]+$/.test(parts[2] ?? '') ? parts[2] : '') {
+        const f = FILE_LETTERS.indexOf(ch.toLowerCase());
+        if (f < 0) continue;
+        const c: Color = ch === ch.toUpperCase() ? 'w' : 'b';
+        const s = sq(f, c === 'w' ? 0 : SIZE - 1);
+        if (board[s] && colorOf(board[s]!) === c) gates.push(s);
+      }
+      pos.gates = gates.sort((a, b) => a - b);
+    }
+    return pos;
   }
 
   function toFen(pos: Position): string {
@@ -95,7 +149,19 @@ export function makeFen(rules: Chess8Rules) {
       if (empty) row += empty;
       rows.push(row);
     }
-    return `${rows.join('/')} ${pos.turn} - - ${pos.halfmove} ${pos.fullmove}`;
+    let hand = '';
+    if (rules.sittuyin) {
+      for (const c of ['w', 'b'] as const)
+        for (const t of SITTUYIN_HAND) hand += (c === 'w' ? t : t.toLowerCase()).repeat(pos.hands?.[c][t] ?? 0);
+      hand = `[${hand}]`;
+    }
+    let castling = '-';
+    if (rules.cambodian && pos.gates?.length) {
+      const letters = (c: Color) =>
+        pos.gates!.filter((s) => rankOf(s) === (c === 'w' ? 0 : SIZE - 1)).map((s) => FILE_LETTERS[fileOf(s)]).sort().join('');
+      castling = letters('w').toUpperCase() + letters('b') || '-';
+    }
+    return `${rows.join('/')}${hand} ${pos.turn} ${castling} - ${pos.halfmove} ${pos.fullmove}`;
   }
 
   return { parseFen, toFen };
@@ -201,39 +267,135 @@ export function makeMoves(rules: Chess8Rules) {
 
   function apply(board: Board, m: Move): Board {
     const next = board.slice();
+    if (m.from < 0) {
+      next[m.to] = m.drop!;
+      return next;
+    }
     const p = next[m.from]!;
-    next[m.to] = m.promo ? (colorOf(p) === 'w' ? rules.promoTo : rules.promoTo.toLowerCase()) : p;
     next[m.from] = null;
+    next[m.to] = m.promo ? (colorOf(p) === 'w' ? rules.promoTo : rules.promoTo.toLowerCase()) : p;
     return next;
   }
 
-  function legalMoves(pos: Position): Move[] {
+  /** Доска после хода стороны `us` (у сброса фигура получает цвет стороны). */
+  const applyFor = (board: Board, m: Move, us: Color) => apply(board, m.from < 0 ? { ...m, drop: us === 'w' ? m.drop : m.drop!.toLowerCase() } : m);
+
+  const count = (board: Board, piece: string) => board.reduce((n, p) => n + (p === piece ? 1 : 0), 0);
+  const fersAttacksEnemy = (board: Board, s: number, us: Color) =>
+    DIAG.some(([df, dr]) => {
+      const f = fileOf(s) + df, r = rankOf(s) + dr;
+      const t = onBoard(f, r) ? board[sq(f, r)] : null;
+      return !!t && colorOf(t) !== us;
+    });
+
+  function pseudoMoves(pos: Position): Move[] {
+    const { board, turn: us } = pos;
     const out: Move[] = [];
-    for (let s = 0; s < pos.board.length; s++) {
-      const p = pos.board[s];
-      if (!p || colorOf(p) !== pos.turn) continue;
+    const hand = pos.hands?.[us] ?? {};
+    // Ситтуйин: пока в руке есть фигуры, сторона только расставляет их в своей половине доски.
+    if (rules.sittuyin && Object.values(hand).some((n) => (n ?? 0) > 0)) {
+      for (const t of SITTUYIN_HAND) {
+        if (!hand[t]) continue;
+        for (let s = 0; s < board.length; s++) {
+          if (board[s]) continue;
+          const rr = us === 'w' ? rankOf(s) : SIZE - 1 - rankOf(s);
+          if (rr > 2 || (t === 'R' && rr !== 0)) continue;
+          out.push({ from: -1, to: s, drop: t });
+        }
+      }
+      return out;
+    }
+    for (let s = 0; s < board.length; s++) {
+      const p = board[s];
+      if (!p || colorOf(p) !== us) continue;
       const pawn = rules.gaits[typeOf(p)] === 'pawn';
-      for (const to of targets(pos.board, s)) {
-        const m: Move = pawn && rankOf(to) === promoRankOf(pos.turn) ? { from: s, to, promo: true } : { from: s, to };
-        if (!kingInCheck(apply(pos.board, m), pos.turn)) out.push(m);
+      for (const to of targets(board, s)) {
+        const promo = pawn && !rules.sittuyin && rankOf(to) === promoRankOf(us);
+        out.push(promo ? { from: s, to, promo: true } : { from: s, to });
+      }
+    }
+    if (rules.sittuyin && count(board, us === 'w' ? 'F' : 'f') === 0) {
+      const pawn = us === 'w' ? 'P' : 'p';
+      const many = count(board, pawn) > 1;
+      for (let s = 0; s < board.length; s++) {
+        if (board[s] !== pawn || (many && rankOf(s) !== sittuyinPromoRank(fileOf(s), us))) continue;
+        const dests = [s];
+        for (const [df, dr] of DIAG) {
+          const f = fileOf(s) + df, r = rankOf(s) + dr;
+          if (onBoard(f, r) && !board[sq(f, r)]) dests.push(sq(f, r));
+        }
+        for (const to of dests) {
+          const b = board.slice();
+          b[s] = null;
+          if (!fersAttacksEnemy(b, to, us)) out.push({ from: s, to, promo: true });
+        }
+      }
+    }
+    if (rules.cambodian && pos.gates?.length) {
+      const fwd = us === 'w' ? 1 : -1;
+      const k = findKing(board, us);
+      if (k >= 0 && pos.gates.includes(k) && !kingInCheck(board, us)) {
+        for (const df of [-2, 2]) {
+          const f = fileOf(k) + df, r = rankOf(k) + fwd;
+          if (onBoard(f, r) && !board[sq(f, r)]) out.push({ from: k, to: sq(f, r) });
+        }
+      }
+      for (const s of pos.gates) {
+        if (board[s] !== (us === 'w' ? 'M' : 'm')) continue;
+        const r = rankOf(s) + 2 * fwd;
+        if (onBoard(fileOf(s), r) && !board[sq(fileOf(s), r)]) out.push({ from: s, to: sq(fileOf(s), r) });
       }
     }
     return out;
   }
 
+  function legalMoves(pos: Position): Move[] {
+    const us = pos.turn;
+    return pseudoMoves(pos).filter((m) => {
+      const b = applyFor(pos.board, m, us);
+      if (kingInCheck(b, us)) return false;
+      // Ситтуйин: превращение не может давать шах.
+      if (rules.sittuyin && m.promo && kingInCheck(b, opposite(us))) return false;
+      return true;
+    });
+  }
+
   function makeMove(pos: Position, m: Move): Position {
-    const reset = !!pos.board[m.to] || rules.gaits[typeOf(pos.board[m.from]!)] === 'pawn';
-    return {
-      board: apply(pos.board, m),
-      turn: opposite(pos.turn),
+    const us = pos.turn;
+    const drop = m.from < 0;
+    const reset = drop || !!pos.board[m.to] || rules.gaits[typeOf(pos.board[m.from]!)] === 'pawn';
+    const next: Position = {
+      board: applyFor(pos.board, m, us),
+      turn: opposite(us),
       halfmove: reset ? 0 : pos.halfmove + 1,
-      fullmove: pos.turn === 'b' ? pos.fullmove + 1 : pos.fullmove,
+      fullmove: us === 'b' ? pos.fullmove + 1 : pos.fullmove,
     };
+    if (pos.hands) {
+      const hands: Record<Color, Hand> = { w: { ...pos.hands.w }, b: { ...pos.hands.b } };
+      if (drop) {
+        hands[us][m.drop!] = (hands[us][m.drop!] ?? 0) - 1;
+        if (!hands[us][m.drop!]) delete hands[us][m.drop!];
+      }
+      next.hands = hands;
+    }
+    if (pos.gates) {
+      let gates = pos.gates.filter((s) => s !== m.from && s !== m.to);
+      // Ладья, вставшая на одну линию с королём соперника, лишает его права на прыжок (как в Fairy-Stockfish).
+      const p = pos.board[m.from];
+      const k = findKing(next.board, opposite(us));
+      if (p && typeOf(p) === 'R' && k >= 0 && gates.includes(k) && (fileOf(k) === fileOf(m.to) || rankOf(k) === rankOf(m.to))) {
+        gates = gates.filter((s) => s !== k);
+      }
+      next.gates = gates;
+    }
+    return next;
   }
 
   const promoChar = rules.promoTo.toLowerCase();
-  const moveToUci = (m: Move) => squareName(m.from) + squareName(m.to) + (m.promo ? promoChar : '');
+  const moveToUci = (m: Move) => (m.from < 0 ? `${m.drop}@${squareName(m.to)}` : squareName(m.from) + squareName(m.to) + (m.promo ? promoChar : ''));
   function uciToMove(uci: string): Move {
+    const d = /^([A-Z])@([a-h][1-8])$/.exec(uci);
+    if (d) return { from: -1, to: parseSquare(d[2]), drop: d[1] };
     const x = /^([a-h][1-8])([a-h][1-8])([a-z])?$/.exec(uci);
     if (!x) throw new Error(`Неверный ход: ${uci}`);
     const m: Move = { from: parseSquare(x[1]), to: parseSquare(x[2]) };
@@ -244,7 +406,8 @@ export function makeMoves(rules: Chess8Rules) {
   return { targets, attacksFrom, findKing, kingInCheck, legalMoves, makeMove, moveToUci, uciToMove };
 }
 
-export const positionKey = (pos: Position) => pos.board.map((p) => p ?? '.').join('') + pos.turn;
+export const positionKey = (pos: Position) =>
+  pos.board.map((p) => p ?? '.').join('') + pos.turn + (pos.gates?.join(',') ?? '') + (pos.hands ? JSON.stringify(pos.hands) : '');
 
 /** Фигуры стороны: тип → количество (вместе с королём). */
 export function material(board: Board, c: Color): Record<string, number> {
@@ -264,7 +427,9 @@ export function repetitionDraw(start: Position, history: HistoryEntry[]): GameRe
 }
 
 export function formatMove8(info: Record<string, PieceInfo>, h: HistoryEntry, promoTo: string) {
+  if (h.move.from < 0) return `${info[h.move.drop!].short}*${squareName(h.move.to)}`;
   const name = info[typeOf(h.piece)].short;
+  if (h.move.from === h.move.to) return `${name} ${squareName(h.move.to)}=${info[promoTo].short}${h.check ? '+' : ''}`;
   const sep = h.captured ? '×' : '–';
   const promo = h.move.promo ? `=${info[promoTo].short}` : '';
   return `${name} ${squareName(h.move.from)}${sep}${squareName(h.move.to)}${promo}${h.check ? '+' : ''}`;
