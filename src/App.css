@@ -1354,3 +1354,157 @@ body {
 .rules-mnemonics {
   margin-bottom: 12px;
 }
+
+/* ---------- История игры ---------- */
+.lore-mark {
+  font-family: 'JanggiHanja', serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #3b2a1a;
+  color: #f7ecd2;
+  font-size: 20px;
+  vertical-align: middle;
+}
+.lore-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 14px;
+  align-items: start;
+  max-width: 1100px;
+}
+.lore-main,
+.lore-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.lore-tagline {
+  margin: 0;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.45;
+}
+.lore h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.lore-section p {
+  margin: 0 0 8px;
+  line-height: 1.55;
+}
+.lore-section p:last-child {
+  margin-bottom: 0;
+}
+.lore-facts {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+.lore-facts li + li {
+  margin-top: 6px;
+}
+.lore-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lore-timeline li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.4;
+  font-size: 14px;
+}
+.lore-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.lore-words {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lore-words dt {
+  font-weight: 600;
+}
+.lore-words dd {
+  margin: 0;
+  font-size: 14px;
+}
+.lore-native {
+  font-size: 18px;
+}
+.lore-tree,
+.lore-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lore-tree ul {
+  padding-left: 16px;
+  border-left: 1px dashed var(--border);
+  margin-left: 8px;
+}
+.lore-tree li {
+  margin: 4px 0;
+}
+.lore-node {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font: inherit;
+  background: none;
+  color: var(--muted);
+  text-align: left;
+}
+.lore-node.playable {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--panel);
+  cursor: pointer;
+}
+.lore-node.playable:hover {
+  border-color: var(--accent);
+}
+.lore-node.current {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.lore-node-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.lore-node-when {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.lore-note {
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+@media (max-width: 760px) {
+  .lore-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
