@@ -1,6 +1,6 @@
 import { JANGGI, MOVE_LIMIT_PLIES } from './janggi';
 import { generalsFacing } from './rules';
-import { colorOf, isDrop, isPass, opposite, sameMove, type Color, type GameResult, type HistoryEntry, type Move, type Piece, type Position, type Variant } from './types';
+import { colorOf, isDrop, opposite, sameMove, type Color, type GameResult, type HistoryEntry, type Move, type Piece, type Position, type Variant } from './types';
 
 export type { EndReason, GameResult, HistoryEntry } from './types';
 export { MOVE_LIMIT_PLIES };
@@ -50,8 +50,9 @@ export class Game {
     const entry: HistoryEntry = {
       move: m,
       uci: v.moveToUci(m),
-      piece: isDrop(m) ? (before.turn === 'w' ? m.drop! : m.drop!.toLowerCase()) : before.board[m.from]!,
-      captured: isPass(m) || isDrop(m) ? null : before.board[m.to],
+      piece: isDrop(m) ? (before.turn === 'w' ? (m.promo ? '+' : '') + m.drop! : ((m.promo ? '+' : '') + m.drop!).toLowerCase()) : before.board[m.from]!,
+      // У пропуска хода и превращения на месте (ситтуйин) взятия нет.
+      captured: m.from === m.to || isDrop(m) ? null : before.board[m.to],
       check: v.inCheck(pos),
       pos,
     };

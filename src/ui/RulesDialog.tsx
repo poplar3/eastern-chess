@@ -4,8 +4,8 @@ import { PIECE_VALUES } from '../core/rules';
 import type { Variant } from '../core/types';
 import { Modal } from './Modal';
 import { PIECE_NAMES, PieceIcon, type PieceStyle } from './pieces';
-import { MakrukRules, ShatranjRules } from './RulesChess8';
-import { ShogiRules, XiangqiRules } from './RulesOther';
+import { CambodianRules, MakrukRules, ShatranjRules, SittuyinRules } from './RulesChess8';
+import { KyotoShogiRules, ManchuRules, MinishogiRules, ShogiRules, XiangqiRules } from './RulesOther';
 
 const PIECE_RULES: { t: PieceType; text: ReactNode }[] = [
   {
@@ -94,6 +94,16 @@ export function RulesDialog({
         <MakrukRules style={style} />
       ) : id === 'shatranj' ? (
         <ShatranjRules style={style} />
+      ) : id === 'cambodian' ? (
+        <CambodianRules style={style} />
+      ) : id === 'sittuyin' ? (
+        <SittuyinRules style={style} />
+      ) : id === 'minishogi' ? (
+        <MinishogiRules style={style} />
+      ) : id === 'kyotoshogi' ? (
+        <KyotoShogiRules style={style} />
+      ) : id === 'manchu' ? (
+        <ManchuRules style={style} />
       ) : (
         <JanggiRules style={style} />
       )}

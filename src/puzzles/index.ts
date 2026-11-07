@@ -40,7 +40,7 @@ export function allPuzzles(game: GameId = 'janggi'): Puzzle[] {
   if (hit) return hit;
   if (game !== 'janggi') {
     const v = getVariant(game);
-    const raw = ({ xiangqi, shogi, makruk, shatranj }[game] ?? []) as (PuzzleData & { origin: string })[];
+    const raw = ((({ xiangqi, shogi, makruk, shatranj }) as Partial<Record<GameId, unknown[]>>)[game] ?? []) as (PuzzleData & { origin: string })[];
     return (cache[game] = sortPuzzles(raw.map(({ origin, ...d }) => annotate({ ...d, source: OTHER_SOURCE[origin] ?? OWN_SOURCE.game }, v))));
   }
   const data = [...own, ...bakbo, ...classic] as (PuzzleData & { origin: keyof typeof OWN_SOURCE | 'classic' })[];

@@ -378,6 +378,11 @@ const BY_GAME: Record<GameId, Partial<Record<ConceptId, Concept>>> = {
   shogi: SHOGI_CONCEPTS,
   makruk: MAKRUK_CONCEPTS,
   shatranj: SHATRANJ_CONCEPTS,
+  cambodian: MAKRUK_CONCEPTS,
+  sittuyin: {},
+  minishogi: SHOGI_CONCEPTS,
+  kyotoshogi: {},
+  manchu: XIANGQI_CONCEPTS,
 };
 
 /** Описания приёмов для этой игры. */

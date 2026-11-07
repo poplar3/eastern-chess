@@ -42,34 +42,85 @@ const RULES: Chess8Rules = {
   pieces: MAKRUK_PIECES,
 };
 
+export const MAKRUK_RULES = RULES;
 const { parseFen, toFen } = makeFen(RULES);
 const mv = makeMoves(RULES);
 
-/** Счёт до ничьей в этой позиции: что считается и сколько полуходов даётся. */
-export function countingPhase(board: Board): { key: string; limit: number; strong: Color | null } | null {
-  if (board.some((p) => p && typeOf(p) === 'P')) return null;
+export type CountingRule = 'makruk' | 'cambodian' | 'asean';
+
+export interface CountingPhase {
+  key: string;
+  /** Сколько полуходов даётся. */
+  limit: number;
+  /** Сторона, которая должна успеть поставить мат; null — «честь доски» без явного сильнейшего. */
+  strong: Color | null;
+  /** board — «честь доски», pieces — «честь фигур» (у слабой стороны один король). */
+  kind: 'board' | 'pieces';
+}
+
+/**
+ * Счёт до ничьей в этой позиции: что считается и сколько полуходов даётся.
+ * - макрук: пешек нет; «честь доски» — 64 хода, «честь фигур» против одинокого короля — 8–64 хода;
+ * - камбоджийские: у слабой стороны не больше трёх фигур — 63 хода, против одинокого короля (без пешек) — 7–63;
+ * - ситтуйин (правило АСЕАН): пешек нет, у слабой стороны один король: против ладьи 16 ходов, слона 44, коня 64.
+ */
+export function countingPhase(board: Board, rule: CountingRule = 'makruk'): CountingPhase | null {
+  const pawns = board.some((p) => p && typeOf(p) === 'P');
   const nw = pieceCount(board, 'w'), nb = pieceCount(board, 'b');
   if (nw === 1 && nb === 1) return null;
-  if (nw === 1 || nb === 1) {
-    const strong: Color = nw === 1 ? 'b' : 'w';
+  const honor = (strong: Color, minus: number) => {
     const m = material(board, strong);
     const moves = (m.R ?? 0) >= 2 ? 8 : m.R ? 16 : (m.S ?? 0) >= 2 ? 22 : (m.N ?? 0) >= 2 ? 32 : m.S ? 44 : 64;
-    return { key: `pieces:${strong}:${Object.entries(m).sort().join()}`, limit: moves * 2, strong };
+    return { key: `pieces:${strong}:${Object.entries(m).sort().join()}`, limit: (moves - minus) * 2, strong, kind: 'pieces' as const };
+  };
+  if (rule === 'makruk') {
+    if (pawns) return null;
+    if (nw === 1 || nb === 1) return honor(nw === 1 ? 'b' : 'w', 0);
+    return { key: 'board', limit: 128, strong: null, kind: 'board' };
   }
-  return { key: 'board', limit: 128, strong: null };
+  if (rule === 'asean') {
+    if (pawns || (nw !== 1 && nb !== 1)) return null;
+    const strong: Color = nw === 1 ? 'b' : 'w';
+    const m = material(board, strong);
+    const moves = m.R ? 16 : m.S ? 44 : m.N ? 64 : 0;
+    return moves ? { key: `pieces:${strong}:${Object.entries(m).sort().join()}`, limit: moves * 2, strong, kind: 'pieces' } : null;
+  }
+  // Камбоджийские: считает слабая сторона, у которой осталось не больше трёх фигур.
+  const weak: Color | null = nw <= 3 && nw < nb ? 'w' : nb <= 3 && nb < nw ? 'b' : null;
+  if (!weak) return nw <= 3 && nw === nb ? { key: 'board', limit: 126, strong: null, kind: 'board' } : null;
+  const strong = opposite(weak);
+  if (pieceCount(board, weak) > 1) return { key: `board:${strong}`, limit: 126, strong, kind: 'board' };
+  return pawns ? null : honor(strong, 1);
 }
 
 /** Сколько полуходов уже идёт текущий счёт и сколько всего даётся. */
-export function countingProgress(start: Position, history: HistoryEntry[]) {
+export function countingProgress(start: Position, history: HistoryEntry[], rule: CountingRule = 'makruk') {
   const positions = [start, ...history.map((h) => h.pos)];
-  const cur = countingPhase(positions[positions.length - 1].board);
+  const cur = countingPhase(positions[positions.length - 1].board, rule);
   if (!cur) return null;
   let i = positions.length - 1;
-  while (i > 0 && countingPhase(positions[i - 1].board)?.key === cur.key) i--;
+  while (i > 0 && countingPhase(positions[i - 1].board, rule)?.key === cur.key) i--;
   return { ...cur, plies: positions.length - 1 - i };
 }
 
-function result(start: Position, history: HistoryEntry[]): GameResult | null {
+/** Строка о счёте для панели партии. */
+export function countingLine(start: Position, history: HistoryEntry[], rule: CountingRule, sidesGen: Record<Color, string>): string | null {
+  const c = countingProgress(start, history, rule);
+  if (!c) return null;
+  const done = Math.floor(c.plies / 2), total = c.limit / 2;
+  const what =
+    c.kind === 'pieces' && c.strong
+      ? `У ${sidesGen[opposite(c.strong)]} остался один король`
+      : rule === 'makruk'
+        ? 'Пешек на доске не осталось'
+        : c.strong
+          ? `У ${sidesGen[opposite(c.strong)]} осталось мало фигур`
+          : 'Фигур осталось мало';
+  return `${what}: счёт ${done} из ${total} ${plural(total, 'хода', 'ходов', 'ходов')} до ничьей`;
+}
+
+/** Общий итог партии для макрука и его родственников: мат, пат, одни короли, повторение и правило счёта. */
+export function makrukResult(mv: ReturnType<typeof makeMoves>, rule: CountingRule, start: Position, history: HistoryEntry[]): GameResult | null {
   const pos = lastPos(start, history);
   if (mv.legalMoves(pos).length === 0) {
     return mv.kingInCheck(pos.board, pos.turn) ? { winner: opposite(pos.turn), reason: 'checkmate' } : { winner: null, reason: 'stalemate' };
@@ -77,13 +128,17 @@ function result(start: Position, history: HistoryEntry[]): GameResult | null {
   if (pieceCount(pos.board, 'w') === 1 && pieceCount(pos.board, 'b') === 1) return { winner: null, reason: 'insufficient' };
   const rep = repetitionDraw(start, history);
   if (rep) return rep;
-  const c = countingProgress(start, history);
+  const c = countingProgress(start, history, rule);
   if (c && c.plies >= c.limit) return { winner: null, reason: 'counting' };
   return null;
 }
 
+const result = (start: Position, history: HistoryEntry[]) => makrukResult(mv, 'makruk', start, history);
+
 export const MAKRUK: Variant = {
   id: 'makruk',
+  family: 'chess8',
+  group: 'main',
   engine: 'makruk',
   name: 'Макрук',
   subtitle: 'тайские шахматы',
@@ -120,13 +175,7 @@ export const MAKRUK: Variant = {
   formatMove: (h) => formatMove8(MAKRUK_PIECES, h, 'M'),
   result,
   positionKey,
-  countingText(start, history) {
-    const c = countingProgress(start, history);
-    if (!c) return null;
-    const done = Math.floor(c.plies / 2), total = c.limit / 2;
-    const what = c.strong ? `У ${c.strong === 'w' ? 'чёрных' : 'белых'} остался один король` : 'Пешек на доске не осталось';
-    return `${what}: счёт ${done} из ${total} ${plural(total, 'хода', 'ходов', 'ходов')} до ничьей`;
-  },
+  countingText: (start, history) => countingLine(start, history, 'makruk', { w: 'белых', b: 'чёрных' }),
   endReasons: {
     checkmate: 'Мат',
     stalemate: 'Пат: у стороны, которая ходит, нет ходов — ничья',

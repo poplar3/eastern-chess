@@ -15,6 +15,7 @@ export { XIANGQI_LESSONS } from './lessonsXiangqi';
 export function lessonsFor(game: GameId): Lesson[] {
   if (game === 'makruk') return MAKRUK_LESSONS;
   if (game === 'shatranj') return SHATRANJ_LESSONS;
+  if (game !== 'janggi' && game !== 'xiangqi' && game !== 'shogi') return [];
   return game === 'xiangqi' ? XIANGQI_LESSONS : game === 'shogi' ? SHOGI_LESSONS : LESSONS;
 }
 export type { ConcreteTask, Diagram, Lesson, TheoryBlock } from './types';

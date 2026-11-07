@@ -1,5 +1,10 @@
 import type { GameId } from '../core/types';
+import { CAMBODIAN_LORE } from './cambodian';
 import { JANGGI_LORE } from './janggi';
+import { KYOTOSHOGI_LORE } from './kyotoshogi';
+import { MANCHU_LORE } from './manchu';
+import { MINISHOGI_LORE } from './minishogi';
+import { SITTUYIN_LORE } from './sittuyin';
 import { MAKRUK_LORE } from './makruk';
 import { SHATRANJ_LORE } from './shatranj';
 import { SHOGI_LORE } from './shogi';
@@ -20,6 +25,11 @@ export const LORE: Partial<Record<GameId, GameLore>> = {
   shogi: SHOGI_LORE,
   makruk: MAKRUK_LORE,
   shatranj: SHATRANJ_LORE,
+  cambodian: CAMBODIAN_LORE,
+  sittuyin: SITTUYIN_LORE,
+  minishogi: MINISHOGI_LORE,
+  kyotoshogi: KYOTOSHOGI_LORE,
+  manchu: MANCHU_LORE,
 };
 
 export const loreFor = (id: GameId): GameLore | null => LORE[id] ?? null;

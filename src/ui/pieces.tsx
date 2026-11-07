@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { JANGGI_PIECES } from '../core/janggi';
-import { colorOf, typeOf, type Color, type GameId, type Piece } from '../core/types';
+import { colorOf, FAMILY_OF, typeOf, type Color, type GameId, type Piece } from '../core/types';
 
 export type PieceStyle = 'icons' | 'hanja';
 
@@ -19,11 +19,18 @@ const INK: Record<GameId, Record<Color, string>> = {
   shogi: { w: '#1f1a14', b: '#1f1a14' },
   makruk: { w: '#3a2a18', b: '#f3e3bf' },
   shatranj: { w: '#3a2a18', b: '#f3e3bf' },
+  cambodian: { w: '#3a2a18', b: '#f3e3bf' },
+  sittuyin: { w: '#3a2a18', b: '#f3e3bf' },
+  minishogi: { w: '#1f1a14', b: '#1f1a14' },
+  kyotoshogi: { w: '#1f1a14', b: '#1f1a14' },
+  manchu: { w: '#b8231f', b: '#1f1f1f' },
 };
 /** Иконки фигур макрука и шатранджа: тип → рисунок. */
 const CHESS8_ICON: Partial<Record<GameId, Record<string, string>>> = {
   makruk: { K: 'K', M: 'A', S: 'SB', N: 'N', R: 'BOAT', P: 'P' },
   shatranj: { K: 'K', Q: 'A', B: 'B', N: 'N', R: 'R', P: 'P' },
+  cambodian: { K: 'K', M: 'A', S: 'SB', N: 'N', R: 'BOAT', P: 'FISH' },
+  sittuyin: { K: 'K', F: 'A', S: 'B', N: 'N', R: 'R', P: 'P' },
 };
 const SHOGI_PROMOTED_INK = '#b8231f';
 
@@ -32,28 +39,46 @@ const HANJA: Record<Color, Record<string, string>> = {
   b: { K: '漢', A: '士', B: '象', N: '馬', R: '車', C: '包', P: '兵' },
 };
 const XIANGQI_HAN: Record<Color, Record<string, string>> = {
-  w: { K: '帥', A: '仕', B: '相', N: '傌', R: '俥', C: '炮', P: '兵' },
+  w: { K: '帥', A: '仕', B: '相', N: '傌', R: '俥', C: '炮', P: '兵', M: '旗' },
   b: { K: '將', A: '士', B: '象', N: '馬', R: '車', C: '砲', P: '卒' },
 };
 const SHOGI_KANJI: Record<string, string> = {
   R: '飛', B: '角', G: '金', S: '銀', N: '桂', L: '香', P: '歩',
   '+R': '龍', '+B': '馬', '+S': '全', '+N': '圭', '+L': '杏', '+P': 'と',
 };
+/** Киото-сёги: у каждой стороны фигуры свой знак (перевёрнутая сторона — с плюсом). */
+const KYOTO_KANJI: Record<string, string> = { L: '香', '+L': 'と', S: '銀', '+S': '角', N: '桂', '+N': '金', P: '歩', '+P': '飛' };
+/** Иконки фигур киото-сёги. */
+const KYOTO_ICON: Record<string, string> = { L: 'SL', '+L': 'SG', S: 'SS', '+S': 'SB', N: 'N', '+N': 'SG', P: 'P', '+P': 'SR' };
+
 /** Иероглиф, которым подписана фигура. */
 export function pieceGlyph(piece: Piece, game: GameId): string {
   const c = colorOf(piece);
   const t = typeOf(piece);
-  if (game === 'shogi') return t === 'K' ? (c === 'w' ? '玉' : '王') : SHOGI_KANJI[t];
-  return game === 'xiangqi' ? XIANGQI_HAN[c][t] : HANJA[c][t];
+  const family = FAMILY_OF[game];
+  if (family === 'shogi') return t === 'K' ? (c === 'w' ? '玉' : '王') : game === 'kyotoshogi' ? KYOTO_KANJI[t] : SHOGI_KANJI[t];
+  return family === 'xiangqi' ? (t === 'M' ? '旗' : XIANGQI_HAN[c][t]) : HANJA[c][t];
 }
 
-const FONT_CLASS: Record<GameId, string> = { janggi: 'hanja', xiangqi: 'hanja-xq', shogi: 'hanja-sh', makruk: '', shatranj: '' };
+const FONT_CLASS: Record<GameId, string> = {
+  janggi: 'hanja',
+  xiangqi: 'hanja-xq',
+  manchu: 'hanja-xq',
+  shogi: 'hanja-sh',
+  minishogi: 'hanja-sh',
+  kyotoshogi: 'hanja-sh',
+  makruk: '',
+  shatranj: '',
+  cambodian: '',
+  sittuyin: '',
+};
 
 /** Радиус фигуры Чанги при шаге сетки 64: генерал крупнее всех, страж и солдат — меньше. */
 export function pieceRadius(t: string, game: GameId = 'janggi'): number {
-  if (game === 'xiangqi') return 27;
-  if (game === 'makruk' || game === 'shatranj') return 26;
-  if (game === 'shogi') return shogiSize(t) * 30;
+  const family = FAMILY_OF[game];
+  if (family === 'xiangqi') return 27;
+  if (family === 'chess8') return 26;
+  if (family === 'shogi') return shogiSize(t) * 30;
   return t === 'K' ? 30 : t === 'A' || t === 'P' ? 21 : 26;
 }
 
@@ -180,6 +205,24 @@ function icon(t: string, c: string, bg = IVORY): ReactNode {
           <path d="M-14 13 H14" stroke={bg} strokeWidth={2.5} strokeLinecap="round" />
         </g>
       );
+    case 'FISH': // пешка камбоджийских шахмат — рыба (трей)
+      return (
+        <g fill={c}>
+          <path d="M-20 0 Q-4 -18 14 -4 L26 -14 L24 0 L26 14 L14 4 Q-4 18 -20 0 Z" />
+          <circle cx={-10} cy={-3} r={2.8} fill={bg} />
+          <path d="M-2 -8 Q3 0 -2 8" stroke={bg} strokeWidth={2} fill="none" strokeLinecap="round" />
+          <rect x={-17} y={17} width={34} height={6} rx={2} />
+        </g>
+      );
+    case 'FLAG': // знамя маньчжурских шахмат
+      return (
+        <g fill={c}>
+          <rect x={-18} y={-28} width={5} height={52} rx={2} />
+          <path d="M-13 -26 Q2 -32 12 -24 Q20 -18 26 -22 V4 Q20 8 12 2 Q2 -6 -13 0 Z" />
+          <path d="M-5 -16 H14 M-5 -8 H14" stroke={bg} strokeWidth={3} strokeLinecap="round" />
+          <rect x={-24} y={22} width={18} height={5} rx={2} />
+        </g>
+      );
     case 'SL': // стрелка — копьё
       return (
         <g fill={c}>
@@ -229,12 +272,14 @@ interface Props {
 export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi', flipped = false }: Props) {
   const c = colorOf(piece);
   const t = typeOf(piece);
-  if (game === 'shogi') {
+  const family = FAMILY_OF[game];
+  if (family === 'shogi') {
     const s = shogiSize(t);
     const promoted = t.startsWith('+');
     const ink = promoted ? SHOGI_PROMOTED_INK : INK.shogi[c];
     const upside = (c === 'b') !== flipped;
-    const label = pieceGlyph(piece, 'shogi');
+    const label = pieceGlyph(piece, game);
+    const iconName = game === 'kyotoshogi' && t !== 'K' ? KYOTO_ICON[t] : shogiIcon(t);
     return (
       <g transform={`translate(${x} ${y}) scale(${scale}) rotate(${upside ? 180 : 0})`} opacity={dim ? 0.45 : 1} className="piece">
         <polygon points={pentagon(s)} fill="rgba(0,0,0,0.25)" transform="translate(1.5 2.5)" />
@@ -244,7 +289,7 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
             {label}
           </text>
         ) : (
-          <g transform={`translate(0 ${3 * s}) scale(${(s * 0.62 * 26) / 30})`}>{icon(shogiIcon(t), ink, '#f3d79a')}</g>
+          <g transform={`translate(0 ${3 * s}) scale(${(s * 0.62 * 26) / 30})`}>{icon(iconName, ink, '#f3d79a')}</g>
         )}
         {promoted && style === 'icons' && (
           <text className="promo-mark" x={13 * s} y={-9 * s} fill={SHOGI_PROMOTED_INK} fontSize={15 * s} textAnchor="middle" dominantBaseline="central">
@@ -272,7 +317,7 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
   const glyph = pieceGlyph(piece, game);
   return (
     <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={dim ? 0.45 : 1} className="piece">
-      {game === 'xiangqi' ? (
+      {family === 'xiangqi' ? (
         <>
           <circle r={r + 1.5} fill="rgba(0,0,0,0.25)" transform="translate(1.5 2.5)" />
           <circle r={r} fill="url(#pieceFill)" stroke={color} strokeWidth={2.4} />
@@ -286,11 +331,11 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
         </>
       )}
       {style === 'hanja' ? (
-        <text className={FONT_CLASS[game]} fill={color} fontSize={r * (game === 'xiangqi' ? 1.05 : 1.15)} textAnchor="middle" dominantBaseline="central" y={1}>
+        <text className={FONT_CLASS[game]} fill={color} fontSize={r * (family === 'xiangqi' ? 1.05 : 1.15)} textAnchor="middle" dominantBaseline="central" y={1}>
           {glyph}
         </text>
       ) : (
-        <g transform={`scale(${(r * 0.72) / 30})`}>{icon(t, color)}</g>
+        <g transform={`scale(${(r * 0.72) / 30})`}>{icon(t === 'M' ? 'FLAG' : t, color)}</g>
       )}
     </g>
   );

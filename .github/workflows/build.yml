@@ -52,11 +52,12 @@ jobs:
         run: node scripts/fetch-engine.mjs --rebuild
       - name: Проверить движок
         run: node scripts/engine-smoke.mjs src-tauri/engine/fairy-stockfish
-      - name: Сверить правила макрука и шатранджа с движком
+      - name: Сверить правила макрука, шатранджа и восточных вариаций с движком
         run: |
-          node scripts/gen-movegen-fixtures.mjs src-tauri/engine/fairy-stockfish 40 1 makruk
-          node scripts/gen-movegen-fixtures.mjs src-tauri/engine/fairy-stockfish 40 1 shatranj
-          npx vitest run src/core/chess8.test.ts
+          for v in makruk shatranj cambodian sittuyin minishogi kyotoshogi manchu; do
+            node scripts/gen-movegen-fixtures.mjs src-tauri/engine/fairy-stockfish 40 1 $v
+          done
+          npx vitest run src/core/chess8.test.ts src/core/eastern.test.ts
       - name: Собрать AppImage и deb
         run: npx tauri build --bundles appimage,deb
       - uses: actions/upload-artifact@v4

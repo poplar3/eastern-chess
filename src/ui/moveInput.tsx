@@ -41,8 +41,9 @@ export function useMoveInput(game: Game, canMove: boolean, onMove: (m: Move) => 
     if (!canMove) return;
     const legal = game.legalMoves();
     if (selectedDrop) {
-      const m = legal.find((x) => x.drop === selectedDrop && x.to === s);
-      if (m) return commit(m);
+      const ms = legal.filter((x) => x.drop === selectedDrop && x.to === s);
+      if (ms.length === 1) return commit(ms[0]);
+      if (ms.length > 1) return setPromo(ms);
     }
     if (selected !== null) {
       const ms = legal.filter((x) => x.from === selected && x.to === s && !isPass(x));
@@ -70,27 +71,33 @@ export function useMoveInput(game: Game, canMove: boolean, onMove: (m: Move) => 
 
   let dialog: ReactNode = null;
   if (promo) {
-    const piece = game.position.board[promo[0].from]!;
-    const promoted = '+' + piece;
-    const yes = promo.find((m) => m.promo)!;
-    const no = promo.find((m) => !m.promo)!;
-    const name = game.variant.pieceInfo(piece);
-    const pname = game.variant.pieceInfo(promoted);
+    const us = game.turn;
+    /** Фигура, которая окажется на поле после хода. */
+    const result = (m: Move) => {
+      if (m.drop) {
+        const t = (m.promo ? '+' : '') + m.drop;
+        return us === 'w' ? t : t.toLowerCase();
+      }
+      const p = game.position.board[m.from]!;
+      return m.promo ? (game.variant.family === 'shogi' ? '+' + p : p) : p;
+    };
+    const drop = !!promo[0].drop;
+    const ordered = [...promo].sort((a, b) => Number(!!b.promo) - Number(!!a.promo));
     dialog = (
-      <Modal title="Превратить фигуру?" onClose={() => setPromo(null)}>
+      <Modal title={drop ? 'Какой стороной поставить?' : 'Превратить фигуру?'} onClose={() => setPromo(null)}>
         <div className="promo-choice">
-          <button className="btn promo-option" onClick={() => commit(yes)}>
-            <PieceIcon piece={promoted} style={style} size={52} game={game.variant.id} />
-            <span>
-              Превратить: <b>{pname.ru.toLowerCase()}</b>
-            </span>
-          </button>
-          <button className="btn promo-option" onClick={() => commit(no)}>
-            <PieceIcon piece={piece} style={style} size={52} game={game.variant.id} />
-            <span>Оставить: {name.ru.toLowerCase()}</span>
-          </button>
+          {ordered.map((m, i) => {
+            const piece = result(m);
+            const name = game.variant.pieceInfo(piece).ru.toLowerCase();
+            return (
+              <button key={i} className="btn promo-option" onClick={() => commit(m)}>
+                <PieceIcon piece={piece} style={style} size={52} game={game.variant.id} />
+                <span>{drop ? <b>{name}</b> : m.promo ? <>Превратить: <b>{name}</b></> : <>Оставить: {name}</>}</span>
+              </button>
+            );
+          })}
         </div>
-        <p className="hint">Фигура ходит в зоне превращения (три дальние горизонтали). Превращаться необязательно, но обычно выгодно.</p>
+        {game.variant.promoHint && <p className="hint">{game.variant.promoHint}</p>}
       </Modal>
     );
   }

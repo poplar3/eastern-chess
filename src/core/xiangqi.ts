@@ -2,6 +2,8 @@
 // Семантика совпадает с вариантом "xiangqi" движка Fairy-Stockfish: мат и пат — поражение,
 // «летающий генерал», вечный шах проигрывает, троекратное повторение и 50 ходов без взятий — ничья.
 // Правило «вечного преследования» (AXF) не проверяется: такое повторение считается ничьей.
+// Маньчжурские шахматы (вариант "manchu"): у красных вместо колесниц, пушек и коней одно знамя (M),
+// которое ходит как колесница, бьёт ещё и как пушка и прыгает как конь.
 import { FILE_LETTERS, FILES, fileOf, onBoard, parseFen, parseSquare, RANKS, rankOf, sq, squareName, toFen, uciToMove } from './rules';
 import {
   colorOf,
@@ -33,7 +35,7 @@ export const XIANGQI_PIECES: Record<string, PieceInfo> = {
 };
 
 /** Ценность фигур в пешках (общепринятая оценка). */
-export const XIANGQI_VALUES: Record<string, number> = { K: 0, R: 9, C: 4.5, N: 4, B: 2, A: 2, P: 1 };
+export const XIANGQI_VALUES: Record<string, number> = { K: 0, M: 16, R: 9, C: 4.5, N: 4, B: 2, A: 2, P: 1 };
 
 const ORTHO: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const DIAG: [number, number][] = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -53,6 +55,52 @@ function pieceMoves(board: Board, from: number, out: Move[]) {
     if (t && colorOf(t) === us) return;
     out.push({ from, to: sq(f, r) });
   };
+  const horse = () => {
+    for (const [df, dr] of ORTHO) {
+      const lf = f0 + df, lr = r0 + dr;
+      if (!onBoard(lf, lr) || board[sq(lf, lr)]) continue;
+      const sides: [number, number][] = df ? [[df, 1], [df, -1]] : [[1, dr], [-1, dr]];
+      for (const [sf, sr] of sides) add(lf + sf, lr + sr);
+    }
+  };
+  const rook = () => {
+    for (const [df, dr] of ORTHO) {
+      let f = f0 + df, r = r0 + dr;
+      while (onBoard(f, r)) {
+        const t = board[sq(f, r)];
+        if (t) {
+          if (colorOf(t) !== us) out.push({ from, to: sq(f, r) });
+          break;
+        }
+        out.push({ from, to: sq(f, r) });
+        f += df;
+        r += dr;
+      }
+    }
+  };
+  /** Пушка: ходит как колесница (quiet), бьёт через ровно одну фигуру-экран. */
+  const cannon = (quiet: boolean) => {
+    for (const [df, dr] of ORTHO) {
+      let f = f0 + df, r = r0 + dr;
+      while (onBoard(f, r) && !board[sq(f, r)]) {
+        if (quiet) out.push({ from, to: sq(f, r) });
+        f += df;
+        r += dr;
+      }
+      // f, r — экран; бьёт первую фигуру за ним
+      f += df;
+      r += dr;
+      while (onBoard(f, r)) {
+        const t = board[sq(f, r)];
+        if (t) {
+          if (colorOf(t) !== us) out.push({ from, to: sq(f, r) });
+          break;
+        }
+        f += df;
+        r += dr;
+      }
+    }
+  };
   switch (typeOf(p)) {
     case 'K':
       for (const [df, dr] of ORTHO) if (inPalace(f0 + df, r0 + dr, us)) add(f0 + df, r0 + dr);
@@ -69,49 +117,19 @@ function pieceMoves(board: Board, from: number, out: Move[]) {
       }
       break;
     case 'N':
-      for (const [df, dr] of ORTHO) {
-        const lf = f0 + df, lr = r0 + dr;
-        if (!onBoard(lf, lr) || board[sq(lf, lr)]) continue;
-        const sides: [number, number][] = df ? [[df, 1], [df, -1]] : [[1, dr], [-1, dr]];
-        for (const [sf, sr] of sides) add(lf + sf, lr + sr);
-      }
+      horse();
       break;
     case 'R':
-      for (const [df, dr] of ORTHO) {
-        let f = f0 + df, r = r0 + dr;
-        while (onBoard(f, r)) {
-          const t = board[sq(f, r)];
-          if (t) {
-            if (colorOf(t) !== us) out.push({ from, to: sq(f, r) });
-            break;
-          }
-          out.push({ from, to: sq(f, r) });
-          f += df;
-          r += dr;
-        }
-      }
+      rook();
       break;
     case 'C':
-      for (const [df, dr] of ORTHO) {
-        let f = f0 + df, r = r0 + dr;
-        while (onBoard(f, r) && !board[sq(f, r)]) {
-          out.push({ from, to: sq(f, r) });
-          f += df;
-          r += dr;
-        }
-        // f, r — экран; бьёт первую фигуру за ним
-        f += df;
-        r += dr;
-        while (onBoard(f, r)) {
-          const t = board[sq(f, r)];
-          if (t) {
-            if (colorOf(t) !== us) out.push({ from, to: sq(f, r) });
-            break;
-          }
-          f += df;
-          r += dr;
-        }
-      }
+      cannon(true);
+      break;
+    case 'M':
+      // Знамя: колесница + взятие пушкой + конь.
+      rook();
+      cannon(false);
+      horse();
       break;
     case 'P': {
       const fwd = us === 'w' ? 1 : -1;
@@ -206,6 +224,8 @@ function result(start: Position, history: HistoryEntry[]): GameResult | null {
 
 export const XIANGQI: Variant = {
   id: 'xiangqi',
+  family: 'xiangqi',
+  group: 'main',
   engine: 'xiangqi',
   name: 'Сянци',
   subtitle: 'китайские шахматы',
@@ -253,5 +273,30 @@ export const XIANGQI: Variant = {
     repetition: 'Троекратное повторение позиции: ничья',
     'perpetual-check': 'Вечный шах запрещён: проигрывает шахующий',
     resign: 'Сдача',
+  },
+};
+
+export const MANCHU_PIECES: Record<string, PieceInfo> = {
+  ...XIANGQI_PIECES,
+  M: { ru: 'Знамя', short: 'Зн', acc: 'знамя', ins: 'знаменем', native: '旗' },
+};
+
+export const MANCHU_START = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/9/9/M1BAKAB2 w - - 0 1';
+
+/** Маньчжурские шахматы (ицзун ци): сянци, где у красных одно знамя вместо колесниц, пушек и коней. */
+export const MANCHU: Variant = {
+  ...XIANGQI,
+  id: 'manchu',
+  group: 'extra',
+  engine: 'manchu',
+  name: 'Маньчжурские',
+  subtitle: 'сянци со знаменем',
+  mark: '旗',
+  startFen: MANCHU_START,
+  pieceInfo: (p) => MANCHU_PIECES[typeOf(p)],
+  formatMove(h) {
+    const name = MANCHU_PIECES[typeOf(h.piece)].short;
+    const sep = h.captured ? '×' : '–';
+    return `${name} ${squareName(h.move.from)}${sep}${squareName(h.move.to)}${h.check ? '+' : ''}`;
   },
 };

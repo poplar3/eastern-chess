@@ -64,7 +64,8 @@ export function parseFen(fen: string): Position {
       if (t[1]) file += parseInt(t[1], 10);
       else {
         const ch = t[2] === 'E' ? 'B' : t[2] === 'e' ? 'b' : t[2];
-        if (!'KABNRCPkabnrcp'.includes(ch)) throw new Error(`FEN: неизвестная фигура ${ch}`);
+        // M — знамя маньчжурских шахмат.
+        if (!'KABNRCPMkabnrcpm'.includes(ch)) throw new Error(`FEN: неизвестная фигура ${ch}`);
         board[sq(file, rank)] = ch;
         file++;
       }

@@ -1,8 +1,32 @@
-// Общие типы для всех игр приложения: Чанги, Сянци, Сёги, Макрук и Шатрандж.
+// Общие типы для всех игр приложения: Чанги, Сянци, Сёги, Макрук, Шатрандж и восточные вариации.
 
 /** w — сторона, которая ходит первой (Чо, красные, сэнтэ); b — вторая (Хан, чёрные, готэ). */
 export type Color = 'w' | 'b';
-export type GameId = 'janggi' | 'xiangqi' | 'shogi' | 'makruk' | 'shatranj';
+export type GameId =
+  | 'janggi'
+  | 'xiangqi'
+  | 'shogi'
+  | 'makruk'
+  | 'shatranj'
+  | 'cambodian'
+  | 'sittuyin'
+  | 'minishogi'
+  | 'kyotoshogi'
+  | 'manchu';
+/** Семейство игры: от него зависят доска, вид фигур и общие правила. */
+export type Family = 'janggi' | 'xiangqi' | 'shogi' | 'chess8';
+export const FAMILY_OF: Record<GameId, Family> = {
+  janggi: 'janggi',
+  xiangqi: 'xiangqi',
+  manchu: 'xiangqi',
+  shogi: 'shogi',
+  minishogi: 'shogi',
+  kyotoshogi: 'shogi',
+  makruk: 'chess8',
+  shatranj: 'chess8',
+  cambodian: 'chess8',
+  sittuyin: 'chess8',
+};
 /**
  * Фигура хранится символом FEN: заглавная — первая сторона, строчная — вторая.
  * Превращённые фигуры сёги записываются с плюсом: «+P», «+r».
@@ -19,8 +43,10 @@ export interface Move {
   to: number;
   /** Сброс из руки (сёги): тип фигуры, заглавной буквой. */
   drop?: string;
-  /** Превращение (сёги). */
+  /** Превращение (сёги, пешка в макруке и ситтуйине); у сброса — фигура ставится перевёрнутой (киото-сёги). */
   promo?: boolean;
+  /** Обратное превращение (киото-сёги: перевёрнутая фигура возвращается на лицевую сторону). */
+  demote?: boolean;
 }
 
 export interface Position {
@@ -28,8 +54,10 @@ export interface Position {
   turn: Color;
   halfmove: number; // полуходов без взятия
   fullmove: number;
-  /** Фигуры в руке у каждой стороны (только сёги). */
+  /** Фигуры в руке у каждой стороны (сёги; в ситтуйине — ещё не расставленные фигуры). */
   hands?: Record<Color, Hand>;
+  /** Камбоджийские шахматы: поля короля и мета, которые ещё не ходили и сохраняют право на особый первый ход. */
+  gates?: number[];
 }
 
 export type EndReason =
@@ -77,6 +105,9 @@ export interface PieceInfo {
 
 export interface Variant {
   id: GameId;
+  family: Family;
+  /** main — основные игры, extra — необычные вариации (в отдельном списке). */
+  group: 'main' | 'extra';
   /** Название варианта в Fairy-Stockfish (UCI_Variant). */
   engine: string;
   name: string;
@@ -94,8 +125,14 @@ export interface Variant {
   kingAcc: string;
   /** Есть пропуск хода (Чанги). */
   hasPass: boolean;
-  /** Взятые фигуры уходят в руку и могут быть сброшены (сёги). */
+  /** Взятые фигуры уходят в руку и могут быть сброшены (сёги); в ситтуйине рука — фигуры для расстановки. */
   hasHands: boolean;
+  /** Порядок фигур в руке на доске. */
+  handOrder?: readonly string[];
+  /** Рука нужна только в начале партии (расстановка в ситтуйине): когда обе пусты, полосы рук не рисуются. */
+  handsOnlyAtStart?: boolean;
+  /** Подсказка к выбору превращения. */
+  promoHint?: string;
   /** Партия может закончиться подсчётом очков (Чанги). */
   hasPoints: boolean;
   /** Фигуры стоят на пересечениях линий (Чанги, Сянци) или в клетках (Сёги, Макрук, Шатрандж). */
@@ -139,9 +176,10 @@ export interface Variant {
 export const colorOf = (p: Piece): Color => (p === p.toUpperCase() ? 'w' : 'b');
 export const typeOf = (p: Piece): string => p.toUpperCase();
 export const opposite = (c: Color): Color => (c === 'w' ? 'b' : 'w');
-export const isPass = (m: Move) => m.from === m.to;
+/** Пропуск хода (Чанги). Превращение пешки на месте в ситтуйине — не пропуск. */
+export const isPass = (m: Move) => m.from === m.to && !m.promo;
 export const isDrop = (m: Move) => m.from < 0;
-export const sameMove = (a: Move, b: Move) => a.from === b.from && a.to === b.to && (a.drop ?? '') === (b.drop ?? '') && !!a.promo === !!b.promo;
+export const sameMove = (a: Move, b: Move) => a.from === b.from && a.to === b.to && (a.drop ?? '') === (b.drop ?? '') && !!a.promo === !!b.promo && !!a.demote === !!b.demote;
 
 export function plural(n: number, one: string, few: string, many: string) {
   const m10 = n % 10, m100 = n % 100;

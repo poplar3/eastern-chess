@@ -3,8 +3,9 @@ import { Evaluator, gameAtPly, HINT_DEPTH, LIVE_DEPTH, MULTIPV, type MoveReview 
 import { accuracy, cpForCho, winPercent } from './analysis/quality';
 import { endReasonText, Game } from './core/game';
 import { setupName, startFenWithSetups, type Setup } from './core/rules';
+import { autoSetupMove, inSetup } from './core/sittuyin';
 import { isPass, opposite, type Color, type GameId, type Move } from './core/types';
-import { GAME_IDS, getVariant, VARIANTS } from './core/variants';
+import { EXTRA_GAME_IDS, getVariant, MAIN_GAME_IDS, VARIANTS } from './core/variants';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
 import { loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig } from './settings';
 import { AiPanel, ARROW_COLORS, REPLY_COLOR, type EngineStatus, type ShownLines } from './ui/AiPanel';
@@ -47,7 +48,7 @@ export default function App() {
   const [prefs, setPrefs] = useState(loadPrefs);
   const gameRef = useRef<Game>(DEV_FEN ? new Game(DEV_FEN, getVariant(config.variant)) : newGame(config));
   /** Партия начата с обычной расстановки (а не с позиции из задачи или ?fen=). */
-  const [fromSetups, setFromSetups] = useState(!DEV_FEN);
+  const [fromSetups, setFromSetups] = useState(!DEV_FEN && config.variant === 'janggi');
   const [version, setVersion] = useState(0);
   const bump = () => setVersion((v) => v + 1);
   const game = gameRef.current;
@@ -297,6 +298,22 @@ export default function App() {
 
   const input = useMoveInput(game, humanCanMove, play, config.pieceStyle);
 
+  // Ситтуйин: «Расставить за меня» — оставшиеся фигуры человека ставятся по готовой схеме.
+  const [autoSetup, setAutoSetup] = useState(false);
+  const setupPhase = !!variant.handsOnlyAtStart && inSetup(game.position);
+  useEffect(() => setAutoSetup(false), [game]);
+  useEffect(() => {
+    if (!autoSetup) return;
+    if (!setupPhase) return setAutoSetup(false);
+    if (!humanCanMove) return;
+    const t = setTimeout(() => {
+      const m = autoSetupMove(game.position);
+      if (m) play(m);
+    }, 120);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSetup, version, humanCanMove, setupPhase]);
+
   const onSquareClick = (s: number) => {
     if (viewing) {
       setViewPly(null);
@@ -515,11 +532,26 @@ export default function App() {
           <span className="muted">{shownVariant.subtitle}</span>
         </div>
         <div className="game-switch segmented" role="tablist" aria-label="Игра">
-          {GAME_IDS.map((id) => (
+          {MAIN_GAME_IDS.map((id) => (
             <button key={id} role="tab" aria-selected={shownVariant.id === id} className={shownVariant.id === id ? 'active' : ''} onClick={() => chooseGame(id)}>
               {VARIANTS[id].name}
             </button>
           ))}
+          <select
+            className={`game-extra${shownVariant.group === 'extra' ? ' active' : ''}`}
+            aria-label="Необычные вариации"
+            value={shownVariant.group === 'extra' ? shownVariant.id : ''}
+            onChange={(e) => e.target.value && chooseGame(e.target.value as GameId)}
+          >
+            <option value="" disabled>
+              Ещё игры…
+            </option>
+            {EXTRA_GAME_IDS.map((id) => (
+              <option key={id} value={id}>
+                {VARIANTS[id].name} — {VARIANTS[id].subtitle}
+              </option>
+            ))}
+          </select>
         </div>
         <nav>
           <button className="btn" onClick={() => setShowNewGame(true)}>
@@ -630,6 +662,11 @@ export default function App() {
           )}
 
           <div className="panel controls">
+            {setupPhase && humanCanMove && (
+              <button className="btn primary" onClick={() => setAutoSetup(true)} disabled={autoSetup} title="Поставить оставшиеся фигуры по готовой схеме">
+                Расставить за меня
+              </button>
+            )}
             {variant.hasPass && (
               <button className="btn" onClick={pass} disabled={!canPass} title="Пропустить ход (нельзя под шахом)">
                 Пропустить ход

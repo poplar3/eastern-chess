@@ -1508,3 +1508,31 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Необычные вариации: выпадающий список в заголовке и группа в окне новой партии */
+.game-switch select.game-extra {
+  padding: 5px 8px;
+  background: transparent;
+  color: #f7ecd2;
+  border: 1px solid #6b5236;
+  border-radius: 6px;
+  font-size: 14px;
+  max-width: 200px;
+}
+.game-switch select.game-extra.active {
+  background: #f7ecd2;
+  color: #3b2a1a;
+  border-color: #f7ecd2;
+  font-weight: 600;
+}
+.game-switch select.game-extra option {
+  color: #3b2a1a;
+  background: #fff;
+}
+.game-choice-group {
+  margin: 8px 0 4px;
+}
+.setup-note {
+  background: #eef4ff;
+  border-color: #b9cdf0;
+}

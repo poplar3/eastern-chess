@@ -2,6 +2,7 @@ import type { Game } from '../core/game';
 import { endReasonText } from '../core/game';
 import { HAN_BONUS, materialPoints, pointsWinner } from '../core/rules';
 import { HAND_ORDER } from '../core/shogi';
+import { inSetup } from '../core/sittuyin';
 import { opposite, type Color } from '../core/types';
 import { PieceIcon, type PieceStyle } from './pieces';
 
@@ -72,11 +73,16 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
         </div>
       )}
 
-      {v.hasHands ? (
+      {v.handsOnlyAtStart && inSetup(game.position) && !result && (
+        <div className="alert setup-note">
+          <b>Расстановка.</b> Поставьте фигуры из руки на свои три ближние горизонтали (колесницы — только на первую). Ходить можно, когда рука опустеет.
+        </div>
+      )}
+      {v.hasHands && !v.handsOnlyAtStart ? (
         <div className="captured">
           {(['w', 'b'] as const).map((c) => {
             const hand = game.position.hands?.[c] ?? {};
-            const items = HAND_ORDER.filter((t) => hand[t]);
+            const items = (v.handOrder ?? HAND_ORDER).filter((t) => hand[t]);
             return (
               <div key={c} className="captured-row">
                 <span className="muted">В руке у {v.sidesGen[c]}:</span>
@@ -115,7 +121,7 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
           )}
         </div>
       )}
-      {v.hasHands && !result && !game.history.some((h) => h.captured) && (
+      {v.hasHands && !v.handsOnlyAtStart && !result && !game.history.some((h) => h.captured) && (
         <div className="muted small">Взятые фигуры переходят в руку: их можно поставить на любое свободное поле вместо хода.</div>
       )}
     </div>
