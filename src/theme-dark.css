@@ -170,3 +170,23 @@
   font-size: 18px;
   line-height: 1;
 }
+
+/* Необычные вариации */
+:root[data-theme='dark'] .game-switch select.game-extra {
+  color: #f0e4cc;
+  border-color: #4a3b2b;
+}
+:root[data-theme='dark'] .game-switch select.game-extra.active {
+  background: #e9dcc2;
+  color: #2b2118;
+  border-color: #e9dcc2;
+}
+:root[data-theme='dark'] .game-switch select.game-extra option {
+  background: var(--panel);
+  color: var(--text);
+}
+:root[data-theme='dark'] .setup-note {
+  background: var(--soft-blue);
+  border-color: var(--soft-blue-border);
+  color: var(--text);
+}
