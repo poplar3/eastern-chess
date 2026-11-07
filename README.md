@@ -1,7 +1,7 @@
-# Чанги — корейские шахматы (а также Сянци и Сёги)
+# Восточные шахматы: Чанги, Сянци и Сёги
 
 Настольное приложение для игры в Чанги (장기), Сянци (象棋, китайские шахматы) и Сёги (将棋, японские шахматы)
-на русском языке. Игра выбирается переключателем в заголовке или в окне «Новая партия». Работает на Windows, Linux и Android; установщики для всех трёх лежат в [Releases](https://github.com/poplar3/janggi-desktop/releases).
+на русском языке. Игра выбирается переключателем в заголовке или в окне «Новая партия». Работает на Windows, Linux и Android; установщики для всех трёх лежат в [Releases](https://github.com/poplar3/eastern-chess/releases).
 
 ## Возможности
 
@@ -105,15 +105,15 @@ npx tauri build        # установщик в src-tauri/target/release/bundle
 
 Интерфейс можно разрабатывать в браузере: `npm run engine-bridge` (мост к движку) и `npm run dev`.
 
-Готовые установщики собираются в GitHub Actions (вкладка Actions → «Сборка» → артефакты `janggi-windows`,
-`janggi-linux` с AppImage и deb, `janggi-android` с APK). При публикации тега `v*` все они прикладываются
+Готовые установщики собираются в GitHub Actions (вкладка Actions → «Сборка» → артефакты `eastern-chess-windows`,
+`eastern-chess-linux` с AppImage и deb, `eastern-chess-android` с APK). При публикации тега `v*` все они прикладываются
 к одному релизу. Для сборки под Linux нужны пакеты `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`,
 `librsvg2-dev` и `patchelf`.
 
 ### Android
 
 APK для телефонов с 64-битным ARM (arm64-v8a — почти все телефоны последних лет, Android 7 и новее) собирается
-там же: артефакт `janggi-android`, файл `janggi-android-arm64.apk`. Его можно скопировать на телефон и установить,
+там же: артефакт `eastern-chess-android`, файл `eastern-chess-android-arm64.apk`. Его можно скопировать на телефон и установить,
 разрешив установку из неизвестных источников.
 
 Движок собирается из исходников компилятором Android NDK с той же встроенной нейросетью Чанги и кладётся в APK
