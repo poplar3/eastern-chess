@@ -111,3 +111,27 @@ export const SITTUYIN: Variant = {
     resign: 'Сдача',
   },
 };
+
+/** Готовая расстановка для кнопки «Расставить за меня» (для белых; у чёрных — зеркально по горизонталям). */
+const PRESET: [string, string][] = [
+  ['R', 'a1'], ['R', 'h1'], ['K', 'e2'], ['F', 'd2'], ['S', 'c2'], ['S', 'f2'], ['N', 'b2'], ['N', 'g2'],
+];
+
+/** Следующий ход расстановки по готовой схеме; если поле занято — первое свободное подходящее. */
+export function autoSetupMove(pos: Position): import('./types').Move | null {
+  const legal = mv.legalMoves(pos).filter((m) => m.from < 0);
+  if (!legal.length) return null;
+  const hand = pos.hands?.[pos.turn] ?? {};
+  const placed: Record<string, number> = {};
+  for (const [t, sqName] of PRESET) {
+    placed[t] = (placed[t] ?? 0) + 1;
+    const left = hand[t] ?? 0;
+    const total = PRESET.filter(([x]) => x === t).length;
+    // Фигуры этого типа ставим по порядку: пропускаем уже поставленные.
+    if (left === 0 || placed[t] <= total - left) continue;
+    const name = pos.turn === 'w' ? sqName : sqName[0] + String(9 - Number(sqName[1]));
+    const m = legal.find((x) => x.drop === t && x.to === parseSquare(name));
+    return m ?? legal.find((x) => x.drop === t) ?? legal[0];
+  }
+  return legal[0];
+}

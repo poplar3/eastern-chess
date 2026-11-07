@@ -27,7 +27,6 @@ export const XIANGQI_MOVE_LIMIT = 100;
 export const XIANGQI_PIECES: Record<string, PieceInfo> = {
   K: { ru: 'Генерал', short: 'Г', acc: 'генерала', ins: 'генералом', native: '帥/將' },
   A: { ru: 'Советник', short: 'Сов', acc: 'советника', ins: 'советником', native: '仕/士' },
-  M: { ru: 'Знамя', short: 'Зн', acc: 'знамя', ins: 'знаменем', native: '旗' },
   B: { ru: 'Слон', short: 'Сл', acc: 'слона', ins: 'слоном', native: '相/象' },
   N: { ru: 'Конь', short: 'К', acc: 'коня', ins: 'конём', native: '傌/馬' },
   R: { ru: 'Колесница', short: 'Кл', acc: 'колесницу', ins: 'колесницей', native: '俥/車' },
@@ -277,6 +276,11 @@ export const XIANGQI: Variant = {
   },
 };
 
+export const MANCHU_PIECES: Record<string, PieceInfo> = {
+  ...XIANGQI_PIECES,
+  M: { ru: 'Знамя', short: 'Зн', acc: 'знамя', ins: 'знаменем', native: '旗' },
+};
+
 export const MANCHU_START = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/9/9/M1BAKAB2 w - - 0 1';
 
 /** Маньчжурские шахматы (ицзун ци): сянци, где у красных одно знамя вместо колесниц, пушек и коней. */
@@ -289,4 +293,10 @@ export const MANCHU: Variant = {
   subtitle: 'сянци со знаменем',
   mark: '旗',
   startFen: MANCHU_START,
+  pieceInfo: (p) => MANCHU_PIECES[typeOf(p)],
+  formatMove(h) {
+    const name = MANCHU_PIECES[typeOf(h.piece)].short;
+    const sep = h.captured ? '×' : '–';
+    return `${name} ${squareName(h.move.from)}${sep}${squareName(h.move.to)}${h.check ? '+' : ''}`;
+  },
 };

@@ -1,7 +1,9 @@
-// Краткие правила Сянци и Сёги.
+// Краткие правила Сянци, Сёги и их вариаций: маньчжурских шахмат, мини-сёги и киото-сёги.
 import type { ReactNode } from 'react';
 import { SHOGI_PIECES } from '../core/shogi';
-import { XIANGQI_PIECES } from '../core/xiangqi';
+import { KYOTO_PIECES } from '../core/minishogi';
+import type { GameId } from '../core/types';
+import { MANCHU_PIECES, XIANGQI_PIECES } from '../core/xiangqi';
 import { PieceIcon, type PieceStyle } from './pieces';
 
 type Row = { t: string; text: ReactNode; promoted?: string };
@@ -218,7 +220,7 @@ export function ShogiRules({ style }: { style: PieceStyle }) {
   );
 }
 
-function PieceTable({ rows, info, style, game }: { rows: Row[]; info: Record<string, { ru: string; native: string }>; style: PieceStyle; game: 'xiangqi' | 'shogi' }) {
+function PieceTable({ rows, info, style, game }: { rows: Row[]; info: Record<string, { ru: string; native: string }>; style: PieceStyle; game: GameId }) {
   return (
     <table className="piece-table">
       <tbody>
@@ -226,7 +228,7 @@ function PieceTable({ rows, info, style, game }: { rows: Row[]; info: Record<str
           <tr key={t}>
             <td className="piece-cell">
               <PieceIcon piece={t} style={style} size={36} game={game} />
-              {game === 'xiangqi' ? (
+              {game === 'xiangqi' || game === 'manchu' ? (
                 <PieceIcon piece={t.toLowerCase()} style={style} size={36} game={game} />
               ) : (
                 promoted && <PieceIcon piece={promoted} style={style} size={36} game={game} />
@@ -248,5 +250,106 @@ function PieceTable({ rows, info, style, game }: { rows: Row[]; info: Record<str
         ))}
       </tbody>
     </table>
+  );
+}
+
+export function ManchuRules({ style }: { style: PieceStyle }) {
+  return (
+    <div className="rules">
+      <section>
+        <h3>Цель игры</h3>
+        <p>
+          Маньчжурские шахматы — сянци эпохи Цин. У <b className="han">чёрных</b> обычная армия сянци, а у{' '}
+          <b className="cho">красных</b> вместо двух колесниц, двух коней и двух пушек одна фигура — <b>знамя</b> (旗).
+          Цель та же: мат генералу. Первыми ходят красные.
+        </p>
+      </section>
+      <section>
+        <h3>Знамя</h3>
+        <PieceTable
+          rows={[
+            {
+              t: 'M',
+              text: (
+                <>
+                  Ходит и бьёт как колесница; кроме того, бьёт как пушка (прыжком через одну фигуру) и ходит как конь
+                  сянци — с той же «подножкой», если соседнее поле занято. Стоит в начале на a1.
+                </>
+              ),
+            },
+          ]}
+          info={MANCHU_PIECES}
+          style={style}
+          game="manchu"
+        />
+      </section>
+      <section>
+        <h3>Остальное</h3>
+        <p>
+          Все остальные правила и фигуры как в сянци: дворец, река, «летающий генерал», пат и вечный шах проигрывают,
+          троекратное повторение и 50 ходов без взятий — ничья. Подробнее — в правилах сянци.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+export function MinishogiRules({ style }: { style: PieceStyle }) {
+  return (
+    <div className="rules">
+      <section>
+        <h3>Цель игры</h3>
+        <p>
+          Мини-сёги — сёги на доске 5×5. У каждой стороны по одной фигуре: король, золото, серебро, слон, ладья и пешка.
+          Ходы, сброс фигур из руки и превращение такие же, как в больших сёги. Ходит первым <b className="cho">сэнтэ</b>.
+        </p>
+      </section>
+      <section>
+        <h3>Фигуры</h3>
+        <PieceTable rows={SHOGI_RULES.filter((r) => ['K', 'R', 'B', 'G', 'S', 'P'].includes(r.t))} info={SHOGI_PIECES} style={style} game="minishogi" />
+      </section>
+      <section>
+        <h3>Отличия от сёги</h3>
+        <p>
+          Зона превращения — одна дальняя горизонталь. Нифу и запрет мата сбросом пешки действуют. Четырёхкратное
+          повторение позиции (сэннититэ) — <b>поражение сэнтэ</b>, если это не вечный шах (тогда проигрывает шахующий).
+        </p>
+      </section>
+    </div>
+  );
+}
+
+export function KyotoShogiRules({ style }: { style: PieceStyle }) {
+  const rows: Row[] = [
+    { t: 'P', promoted: '+P', text: <>Пешка — шаг вперёд; ладья — на любое расстояние по прямой.</> },
+    { t: 'S', promoted: '+S', text: <>Серебро — по диагонали или прямо вперёд; слон — на любое расстояние по диагонали.</> },
+    { t: 'N', promoted: '+N', text: <>Конь — прыжок на два вперёд и один в сторону; золото — на клетку в любую сторону, кроме диагоналей назад.</> },
+    { t: 'L', promoted: '+L', text: <>Стрелка — на любое расстояние прямо вперёд; токин — как золото.</> },
+  ];
+  return (
+    <div className="rules">
+      <section>
+        <h3>Цель игры</h3>
+        <p>
+          Киото-сёги — сёги 5×5 с фигурами-перевёртышами. Цель — мат королю. Ходит первым <b className="cho">сэнтэ</b>.
+        </p>
+      </section>
+      <section>
+        <h3>Переворот после каждого хода</h3>
+        <p>
+          У каждой фигуры, кроме короля, две стороны. После любого хода фигура переворачивается на другую сторону:
+          пешка становится ладьёй, ладья — пешкой, и так далее. В записи переворот отмечен знаком ↻.
+        </p>
+        <PieceTable rows={rows} info={KYOTO_PIECES} style={style} game="kyotoshogi" />
+      </section>
+      <section>
+        <h3>Сброс фигур</h3>
+        <p>
+          Взятые фигуры уходят в руку и могут быть сброшены на любое свободное поле <b>любой стороной вверх</b>.
+          Нифу и запрета мата сбросом пешки нет. Нет ходов — поражение; четырёхкратное повторение — ничья, вечный шах
+          проигрывает.
+        </p>
+      </section>
+    </div>
   );
 }

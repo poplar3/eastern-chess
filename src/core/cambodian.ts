@@ -13,7 +13,7 @@ import { typeOf, type HistoryEntry, type PieceInfo, type Position, type Variant 
 export const CAMBODIAN_START = 'rnsmksnr/8/pppppppp/8/8/PPPPPPPP/8/RNSKMSNR w DEde - 0 1';
 
 export const CAMBODIAN_PIECES: Record<string, PieceInfo> = {
-  K: { ru: 'Король', short: 'Кр', acc: 'короля', ins: 'королём', native: 'អង្គ, анг' },
+  K: { ru: 'Король', short: 'Кр', acc: 'короля', ins: 'королём', native: 'ស្តេច, сдач' },
   M: { ru: 'Нианг', short: 'Нг', acc: 'нианг', ins: 'нианг', native: 'នាង, нианг (госпожа)' },
   S: { ru: 'Кол', short: 'Кл', acc: 'кол', ins: 'колом', native: 'គោល, кол (столб)' },
   N: { ru: 'Конь', short: 'К', acc: 'коня', ins: 'конём', native: 'សេះ, сэх' },

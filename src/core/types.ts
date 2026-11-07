@@ -15,6 +15,18 @@ export type GameId =
   | 'manchu';
 /** Семейство игры: от него зависят доска, вид фигур и общие правила. */
 export type Family = 'janggi' | 'xiangqi' | 'shogi' | 'chess8';
+export const FAMILY_OF: Record<GameId, Family> = {
+  janggi: 'janggi',
+  xiangqi: 'xiangqi',
+  manchu: 'xiangqi',
+  shogi: 'shogi',
+  minishogi: 'shogi',
+  kyotoshogi: 'shogi',
+  makruk: 'chess8',
+  shatranj: 'chess8',
+  cambodian: 'chess8',
+  sittuyin: 'chess8',
+};
 /**
  * Фигура хранится символом FEN: заглавная — первая сторона, строчная — вторая.
  * Превращённые фигуры сёги записываются с плюсом: «+P», «+r».

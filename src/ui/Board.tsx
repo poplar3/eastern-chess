@@ -68,9 +68,14 @@ export function Board({
   const FILES = variant.files;
   const RANKS = variant.ranks;
   const cells = variant.board === 'cells';
-  const shogi = game === 'shogi';
+  const shogi = variant.family === 'shogi';
+  const xiangqi = variant.family === 'xiangqi';
+  const handOrder = variant.handOrder ?? HAND_ORDER;
   const MARGIN = cells ? MARGIN_CELLS : MARGIN_LINES;
-  const handH = variant.hasHands ? HAND_H : 0;
+  // В ситтуйине рука нужна только на время расстановки.
+  const showHands =
+    variant.hasHands && (!variant.handsOnlyAtStart || (['w', 'b'] as const).some((c) => Object.values(hands?.[c] ?? {}).some((n) => (n ?? 0) > 0)));
+  const handH = showHands ? HAND_H : 0;
   const W = cells ? FILES * CELL + 2 * MARGIN : (FILES - 1) * CELL + 2 * MARGIN;
   const BH = cells ? RANKS * CELL + 2 * MARGIN : (RANKS - 1) * CELL + 2 * MARGIN;
   const H = BH + 2 * handH;
@@ -87,8 +92,8 @@ export function Board({
   /** Сторона, чья рука нарисована снизу. */
   const bottom: Color = flipped ? 'b' : 'w';
   const handSlot = (c: Color, t: string) => {
-    const list = HAND_ORDER.filter((x) => (hands?.[c][x] ?? 0) > 0);
-    let i = list.indexOf(t as (typeof HAND_ORDER)[number]);
+    const list = handOrder.filter((x) => (hands?.[c][x] ?? 0) > 0);
+    let i = list.indexOf(t);
     if (i < 0) i = list.length;
     const n = Math.max(list.length, 1);
     const x0 = W / 2 - ((n - 1) * HAND_SLOT) / 2;
@@ -134,7 +139,7 @@ export function Board({
       return lines.join('');
     }
     for (let f = 0; f < FILES; f++) {
-      if (game === 'xiangqi' && f > 0 && f < FILES - 1) {
+      if (xiangqi && f > 0 && f < FILES - 1) {
         // Река: внутренние вертикали прерываются между 5-й и 6-й горизонталями.
         const a = pt(f, 0), b = pt(f, 4), c = pt(f, 5), d = pt(f, RANKS - 1);
         lines.push(`M${a.x} ${a.y}L${b.x} ${b.y}M${c.x} ${c.y}L${d.x} ${d.y}`);
@@ -184,7 +189,7 @@ export function Board({
           </marker>
         ))}
       </defs>
-      {variant.hasHands && (
+      {showHands && (
         <>
           <rect x={0} y={0} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
           <rect x={0} y={H - HAND_H + 6} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
@@ -200,11 +205,11 @@ export function Board({
         </>
       )}
       {cells && <rect x={bx0} y={by0} width={FILES * CELL} height={RANKS * CELL} fill="none" stroke="#5b3a17" strokeWidth={2.5} />}
-      {shogi &&
+      {shogi && FILES === 9 &&
         [3, 6].flatMap((i) =>
           [3, 6].map((j) => <circle key={`hs${i}${j}`} cx={MARGIN + i * CELL} cy={by0 + j * CELL} r={4} fill="#5b3a17" />),
         )}
-      {game === 'xiangqi' && (() => {
+      {xiangqi && (() => {
         const y = (pt(0, 4).y + pt(0, 5).y) / 2;
         const left = flipped ? '漢 界' : '楚 河';
         const right = flipped ? '楚 河' : '漢 界';
@@ -268,9 +273,9 @@ export function Board({
         return <line className="bikjang-line" x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
       })()}
 
-      {variant.hasHands &&
+      {showHands &&
         (['w', 'b'] as const).map((c) =>
-          HAND_ORDER.filter((t) => (hands?.[c][t] ?? 0) > 0).map((t) => {
+          handOrder.filter((t) => (hands?.[c][t] ?? 0) > 0).map((t) => {
             const { x, y } = handSlot(c, t);
             const n = hands![c][t]!;
             const active = !!onHandClick && turn === c;
@@ -318,8 +323,11 @@ export function Board({
 
       {[...targetSet.keys()].map((s) => {
         const { x, y } = pos(s);
-        const isPassTarget = targetSet.get(s)!.from === s;
-        if (isPassTarget) return null;
+        const tm = targetSet.get(s)!;
+        if (tm.from === s) {
+          // Превращение пешки на месте (ситтуйин): пунктирное кольцо вокруг самой фигуры.
+          return tm.promo ? <circle key={`t${s}`} cx={x} cy={y} r={cells ? 26 : 30} fill="none" stroke="rgba(142,68,173,0.9)" strokeWidth={4} strokeDasharray="6 5" /> : null;
+        }
         return board[s] ? (
           <circle key={`t${s}`} cx={x} cy={y} r={cells ? 29 : 33} fill="none" stroke="rgba(47,111,214,0.85)" strokeWidth={4} />
         ) : (

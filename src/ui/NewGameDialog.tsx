@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { SETUPS, randomSetup, setupName, type Color, type Setup } from '../core/rules';
-import { GAME_IDS, getVariant, VARIANTS } from '../core/variants';
+import { EXTRA_GAME_IDS, getVariant, MAIN_GAME_IDS, VARIANTS } from '../core/variants';
+import type { GameId } from '../core/types';
 import { BOT_LEVELS, levelRank } from '../engine/engine';
 import type { GameConfig } from '../settings';
 import { Modal } from './Modal';
@@ -54,8 +55,24 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
     const botColor = c.humanColor === 'w' ? 'b' : 'w';
     onStart(janggi ? { ...c, [setupKey(botColor)]: randomSetup() } : c);
   };
-  const preview = variant.id === 'shogi' ? ['R', 'B', '+P', 'k'] : ['R', 'N', 'C', 'k'];
-  const chess8Preview = variant.id === 'makruk' ? ['R', 'S', 'M', 'k'] : ['R', 'B', 'Q', 'k'];
+  const PREVIEW: Partial<Record<GameId, string[]>> = {
+    shogi: ['R', 'B', '+P', 'k'],
+    minishogi: ['R', 'B', '+P', 'k'],
+    kyotoshogi: ['+P', 'S', '+S', 'k'],
+    manchu: ['M', 'C', 'n', 'k'],
+    makruk: ['R', 'S', 'M', 'k'],
+    cambodian: ['R', 'P', 'M', 'k'],
+    sittuyin: ['R', 'S', 'F', 'k'],
+    shatranj: ['R', 'B', 'Q', 'k'],
+  };
+  const preview = PREVIEW[variant.id] ?? ['R', 'N', 'C', 'k'];
+  const chess8Preview = preview;
+  const gameButton = (id: GameId) => (
+    <button key={id} className={c.variant === id ? 'active' : ''} onClick={() => set('variant', id)}>
+      <span className="game-choice-name">{VARIANTS[id].name}</span>
+      <span className="muted small">{VARIANTS[id].subtitle}</span>
+    </button>
+  );
   const sideNote = (col: Color) =>
     janggi ? (col === 'w' ? ' (ходит первым)' : ' (+1,5 очка)') : col === 'w' ? (variant.pluralSides ? ' (ходят первыми)' : ' (ходит первым)') : '';
 
@@ -72,14 +89,9 @@ export function NewGameDialog({ initial, onStart, onClose }: Props) {
       <div className="form-grid">
         <div className="field">
           <label>Игра</label>
-          <div className="segmented game-choice">
-            {GAME_IDS.map((id) => (
-              <button key={id} className={c.variant === id ? 'active' : ''} onClick={() => set('variant', id)}>
-                <span className="game-choice-name">{VARIANTS[id].name}</span>
-                <span className="muted small">{VARIANTS[id].subtitle}</span>
-              </button>
-            ))}
-          </div>
+          <div className="segmented game-choice">{MAIN_GAME_IDS.map(gameButton)}</div>
+          <div className="game-choice-group muted small">Необычные вариации</div>
+          <div className="segmented game-choice">{EXTRA_GAME_IDS.map(gameButton)}</div>
         </div>
 
         {variant.hasGlyphs ? (
