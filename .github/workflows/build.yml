@@ -6,6 +6,11 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Выпустить релиз v<версия из package.json>'
+        type: boolean
+        default: false
 
 jobs:
   test:
@@ -115,9 +120,10 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          RELEASE: ${{ inputs.release }}
         run: |
           if [ -z "$KEYSTORE" ]; then
-            if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            if [[ "$GITHUB_REF" == refs/tags/v* || "$RELEASE" == "true" ]]; then
               echo "::error::Релиз нельзя подписывать отладочным ключом: задайте секрет ANDROID_KEYSTORE_BASE64"
               exit 1
             fi
@@ -138,13 +144,22 @@ jobs:
           path: janggi-android-arm64.apk
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Релиз: пуш тега v* или ручной запуск с release=true (тег создаётся из версии в package.json).
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release
     needs: [windows, linux, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Определить тег
+        id: tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "name=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/download-artifact@v4
         with:
           pattern: janggi-*
@@ -154,5 +169,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/**/*
+          tag_name: ${{ steps.tag.outputs.name }}
+          target_commitish: ${{ github.sha }}
           # Описание релиза: release-notes/<тег>.md
-          body_path: release-notes/${{ github.ref_name }}.md
+          body_path: release-notes/${{ steps.tag.outputs.name }}.md
