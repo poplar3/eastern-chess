@@ -68,7 +68,7 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
       )}
       {!result && game.inCheck() && (
         <div className="alert check">
-          <b>Шах!</b> {v.id === 'xiangqi' ? `${S[game.turn]} должны защитить генерала.` : `${S[game.turn]} должен защитить ${v.kingAcc}.`}
+          <b>Шах!</b> {v.pluralSides ? `${S[game.turn]} должны защитить ${v.kingAcc}.` : `${S[game.turn]} должен защитить ${v.kingAcc}.`}
         </div>
       )}
 
@@ -96,7 +96,7 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
           {(['w', 'b'] as const).map((c) => (
             <div key={c} className="captured-row">
               <span className="muted">
-                {S[c]} {v.id === 'xiangqi' ? 'взяли' : 'взял'}:
+                {S[c]} {v.pluralSides ? 'взяли' : 'взял'}:
               </span>
               {captured[c].length === 0 && <span className="muted"> —</span>}
               {captured[c].map((p, i) => (
@@ -106,9 +106,10 @@ export function ScorePanel({ game, style }: { game: Game; style: PieceStyle }) {
           ))}
         </div>
       )}
+      {!result && v.countingText?.(game.start, game.history) && <div className="muted small">{v.countingText(game.start, game.history)}</div>}
       {v.moveLimitPlies > 0 && (
         <div className="muted small">
-          Без взятий: {game.position.halfmove} из {v.moveLimitPlies} полуходов
+          {v.id === 'shatranj' ? 'Без взятий и ходов пешек' : 'Без взятий'}: {game.position.halfmove} из {v.moveLimitPlies} полуходов
           {v.hasPass && last && last.move.from === last.move.to && !result && (
             <> · {S[opposite(game.turn)]} пропустил ход: второй пропуск подряд закончит партию подсчётом очков</>
           )}

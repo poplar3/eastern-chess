@@ -1,10 +1,10 @@
 [package]
-name = "janggi-desktop"
+name = "eastern-chess"
 version = "0.3.0"
-description = "Чанги — корейские шахматы"
+description = "Восточные шахматы: чанги, сянци, сёги"
 authors = ["poplar3"]
 license = "GPL-3.0"
-repository = "https://github.com/poplar3/janggi-desktop"
+repository = "https://github.com/poplar3/eastern-chess"
 edition = "2024"
 rust-version = "1.90"
 

@@ -67,9 +67,10 @@ export function Board({
   const game = variant.id;
   const FILES = variant.files;
   const RANKS = variant.ranks;
-  const cells = game === 'shogi';
+  const cells = variant.board === 'cells';
+  const shogi = game === 'shogi';
   const MARGIN = cells ? MARGIN_CELLS : MARGIN_LINES;
-  const handH = cells ? HAND_H : 0;
+  const handH = variant.hasHands ? HAND_H : 0;
   const W = cells ? FILES * CELL + 2 * MARGIN : (FILES - 1) * CELL + 2 * MARGIN;
   const BH = cells ? RANKS * CELL + 2 * MARGIN : (RANKS - 1) * CELL + 2 * MARGIN;
   const H = BH + 2 * handH;
@@ -183,7 +184,7 @@ export function Board({
           </marker>
         ))}
       </defs>
-      {cells && (
+      {variant.hasHands && (
         <>
           <rect x={0} y={0} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
           <rect x={0} y={H - HAND_H + 6} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
@@ -199,7 +200,7 @@ export function Board({
         </>
       )}
       {cells && <rect x={bx0} y={by0} width={FILES * CELL} height={RANKS * CELL} fill="none" stroke="#5b3a17" strokeWidth={2.5} />}
-      {cells &&
+      {shogi &&
         [3, 6].flatMap((i) =>
           [3, 6].map((j) => <circle key={`hs${i}${j}`} cx={MARGIN + i * CELL} cy={by0 + j * CELL} r={4} fill="#5b3a17" />),
         )}
@@ -219,7 +220,7 @@ export function Board({
         );
       })()}
 
-      {cells
+      {shogi
         ? Array.from({ length: FILES }, (_, f) => {
             const p = pt(f, 0);
             return (
@@ -238,7 +239,7 @@ export function Board({
           })}
       {Array.from({ length: RANKS }, (_, r) => {
         const p = pt(flipped ? FILES - 1 : 0, r);
-        return cells ? (
+        return shogi ? (
           <text key={`r${r}`} className="coord coord-kanji" x={W - MARGIN / 2 + 1} y={p.y + 6} textAnchor="middle">
             {variant.rankLabels[r]}
           </text>
@@ -267,7 +268,7 @@ export function Board({
         return <line className="bikjang-line" x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
       })()}
 
-      {cells &&
+      {variant.hasHands &&
         (['w', 'b'] as const).map((c) =>
           HAND_ORDER.filter((t) => (hands?.[c][t] ?? 0) > 0).map((t) => {
             const { x, y } = handSlot(c, t);

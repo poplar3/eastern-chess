@@ -60,7 +60,7 @@ export function MoveList({ game, reviews, viewPly, onSelect }: Props) {
   return (
     <div className="moves" ref={ref}>
       {rows.length === 0 && (
-        <div className="muted small">{game.variant.id === 'xiangqi' ? 'Первыми ходят красные.' : `Первым ходит ${game.variant.sides.w}.`}</div>
+        <div className="muted small">{game.variant.pluralSides ? `Первыми ходят ${game.variant.sides.w.toLowerCase()}.` : `Первым ходит ${game.variant.sides.w}.`}</div>
       )}
       <table>
         <tbody>
