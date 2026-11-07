@@ -16,6 +16,8 @@ import { PuzzlesView } from './ui/PuzzlesView';
 import { TrainingView } from './ui/TrainingView';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
+import { MnemonicsDialog } from './ui/MnemonicsDialog';
+import { markMnemonicsSeen, MNEMONICS, mnemonicsSeen } from './ui/mnemonics';
 import { ScorePanel } from './ui/ScorePanel';
 import { useMoveInput } from './ui/moveInput';
 import { allPuzzles } from './puzzles';
@@ -53,6 +55,10 @@ export default function App() {
   const [flipped, setFlipped] = useState(config.mode === 'bot' && config.humanColor === 'b');
   const [showNewGame, setShowNewGame] = useState(!DEV_FEN);
   const [showRules, setShowRules] = useState(false);
+  /** Подсказки по иероглифам: сами открываются в первой партии с иероглифами в каждой игре. */
+  const [showMnemonics, setShowMnemonics] = useState(
+    () => !DEV_FEN && config.pieceStyle === 'hanja' && !mnemonicsSeen(config.variant),
+  );
   const [view, setView] = useState<'game' | 'puzzles' | 'training'>(() => {
     const v = DEV_PARAMS?.get('view');
     return v === 'puzzles' || v === 'training' ? v : 'game';
@@ -289,7 +295,13 @@ export default function App() {
     setViewPly(null);
     setReviewOpen(false);
     setReviewProgress(null);
+    setShowMnemonics(c.pieceStyle === 'hanja' && !mnemonicsSeen(c.variant));
     bump();
+  };
+
+  const closeMnemonics = () => {
+    markMnemonicsSeen(shownVariant.id);
+    setShowMnemonics(false);
   };
 
   const resign = () => {
@@ -579,7 +591,22 @@ export default function App() {
           }
         />
       )}
-      {showRules && <RulesDialog variant={shownVariant} style={config.pieceStyle} onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <RulesDialog
+          variant={shownVariant}
+          style={config.pieceStyle}
+          onClose={() => setShowRules(false)}
+          onMnemonics={
+            MNEMONICS[shownVariant.id]
+              ? () => {
+                  setShowRules(false);
+                  setShowMnemonics(true);
+                }
+              : undefined
+          }
+        />
+      )}
+      {showMnemonics && !showNewGame && MNEMONICS[shownVariant.id] && <MnemonicsDialog variant={shownVariant} onClose={closeMnemonics} />}
       {result && !resultClosed && view === 'game' && (
         <Modal
           title="Партия окончена"

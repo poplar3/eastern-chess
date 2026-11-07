@@ -66,10 +66,26 @@ const PIECE_RULES: { t: PieceType; text: ReactNode }[] = [
   },
 ];
 
-export function RulesDialog({ variant, style, onClose }: { variant?: Variant; style: PieceStyle; onClose: () => void }) {
+export function RulesDialog({
+  variant,
+  style,
+  onClose,
+  onMnemonics,
+}: {
+  variant?: Variant;
+  style: PieceStyle;
+  onClose: () => void;
+  /** Открыть подсказки, как запомнить иероглифы. */
+  onMnemonics?: () => void;
+}) {
   const id = variant?.id ?? 'janggi';
   return (
     <Modal title={`Краткие правила: ${variant?.name ?? 'Чанги'}`} onClose={onClose} wide>
+      {onMnemonics && (
+        <button className="btn rules-mnemonics" onClick={onMnemonics}>
+          Как запомнить иероглифы
+        </button>
+      )}
       {id === 'xiangqi' ? (
         <XiangqiRules style={style} />
       ) : id === 'shogi' ? (

@@ -39,6 +39,14 @@ const SHOGI_KANJI: Record<string, string> = {
   R: '飛', B: '角', G: '金', S: '銀', N: '桂', L: '香', P: '歩',
   '+R': '龍', '+B': '馬', '+S': '全', '+N': '圭', '+L': '杏', '+P': 'と',
 };
+/** Иероглиф, которым подписана фигура. */
+export function pieceGlyph(piece: Piece, game: GameId): string {
+  const c = colorOf(piece);
+  const t = typeOf(piece);
+  if (game === 'shogi') return t === 'K' ? (c === 'w' ? '玉' : '王') : SHOGI_KANJI[t];
+  return game === 'xiangqi' ? XIANGQI_HAN[c][t] : HANJA[c][t];
+}
+
 const FONT_CLASS: Record<GameId, string> = { janggi: 'hanja', xiangqi: 'hanja-xq', shogi: 'hanja-sh', makruk: '', shatranj: '' };
 
 /** Радиус фигуры Чанги при шаге сетки 64: генерал крупнее всех, страж и солдат — меньше. */
@@ -226,7 +234,7 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
     const promoted = t.startsWith('+');
     const ink = promoted ? SHOGI_PROMOTED_INK : INK.shogi[c];
     const upside = (c === 'b') !== flipped;
-    const label = t === 'K' ? (c === 'w' ? '玉' : '王') : SHOGI_KANJI[t];
+    const label = pieceGlyph(piece, 'shogi');
     return (
       <g transform={`translate(${x} ${y}) scale(${scale}) rotate(${upside ? 180 : 0})`} opacity={dim ? 0.45 : 1} className="piece">
         <polygon points={pentagon(s)} fill="rgba(0,0,0,0.25)" transform="translate(1.5 2.5)" />
@@ -261,7 +269,7 @@ export function PieceView({ piece, style, x, y, scale = 1, dim, game = 'janggi',
       </g>
     );
   }
-  const glyph = game === 'xiangqi' ? XIANGQI_HAN[c][t] : HANJA[c][t];
+  const glyph = pieceGlyph(piece, game);
   return (
     <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={dim ? 0.45 : 1} className="piece">
       {game === 'xiangqi' ? (
