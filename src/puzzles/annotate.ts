@@ -42,15 +42,19 @@ export const LEVELS: Level[] = [
   { n: 5, ru: 'Сильный', rank: '1 дан и выше' },
 ];
 
+const STRENGTH_LEVELS: Level[] = [
+  { n: 1, ru: 'Начальный', rank: 'первые партии' },
+  { n: 2, ru: 'Новичок', rank: 'знает правила' },
+  { n: 3, ru: 'Любитель', rank: 'клубный игрок' },
+  { n: 4, ru: 'Опытный', rank: 'сильный клубный игрок' },
+  { n: 5, ru: 'Сильный', rank: 'кандидат в мастера' },
+];
+
 const LEVELS_BY_GAME: Record<GameId, Level[]> = {
   janggi: LEVELS,
-  xiangqi: [
-    { n: 1, ru: 'Начальный', rank: 'первые партии' },
-    { n: 2, ru: 'Новичок', rank: 'знает правила' },
-    { n: 3, ru: 'Любитель', rank: 'клубный игрок' },
-    { n: 4, ru: 'Опытный', rank: 'сильный клубный игрок' },
-    { n: 5, ru: 'Сильный', rank: 'кандидат в мастера' },
-  ],
+  xiangqi: STRENGTH_LEVELS,
+  makruk: STRENGTH_LEVELS,
+  shatranj: STRENGTH_LEVELS,
   shogi: [
     { n: 1, ru: 'Начальный', rank: '15–10 кю' },
     { n: 2, ru: 'Новичок', rank: '9–6 кю' },
@@ -79,6 +83,8 @@ export interface Puzzle extends PuzzleData {
 const MATE_BY_PIECE: Record<GameId, Record<string, ConceptId>> = {
   janggi: { R: 'mate-chariot', C: 'mate-cannon', N: 'mate-horse', B: 'mate-elephant', P: 'mate-soldier' },
   xiangqi: { R: 'mate-chariot', C: 'mate-cannon', N: 'mate-horse', P: 'mate-soldier' },
+  makruk: {},
+  shatranj: {},
   shogi: {
     R: 'mate-rook', '+R': 'mate-rook', B: 'mate-bishop', '+B': 'mate-bishop',
     G: 'mate-gold', '+P': 'mate-gold', '+L': 'mate-gold', '+N': 'mate-gold', '+S': 'mate-gold',

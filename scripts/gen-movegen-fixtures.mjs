@@ -1,5 +1,5 @@
 // Генерирует эталонные позиции и списки легальных ходов с помощью Fairy-Stockfish.
-// Использование: node scripts/gen-movegen-fixtures.mjs <путь к fairy-stockfish> [игр] [seed] [janggi|xiangqi|shogi]
+// Использование: node scripts/gen-movegen-fixtures.mjs <путь к fairy-stockfish> [игр] [seed] [janggi|xiangqi|shogi|makruk|shatranj]
 // Результат: src/core/__fixtures__/fsf-movegen.json (Чанги) или fsf-movegen-<игра>.json
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -45,14 +45,17 @@ for (let g = 0; g < Number(gamesArg); g++) {
   const startFen =
     variant === 'janggi'
       ? `${top}/4k4/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/4K4/${bottom} w - - 0 1`
-      : variant === 'xiangqi'
-        ? 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1'
-        : 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL[] w - - 0 1';
+      : {
+          xiangqi: 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1',
+          shogi: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL[] w - - 0 1',
+          makruk: 'rnsmksnr/8/pppppppp/8/8/PPPPPPPP/8/RNSKMSNR w - - 0 1',
+          shatranj: 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w - - 0 1',
+        }[variant];
   const moves = [];
   for (let ply = 0; ply < 160; ply++) {
     const pos = `position fen ${startFen}${moves.length ? ' moves ' + moves.join(' ') : ''}`;
     const out = await send(`${pos}\ngo perft 1`, (l) => l.startsWith('Nodes searched'));
-    const legal = out.filter((l) => /^([a-i]\d+[a-i]\d+\+?|[A-Z]@[a-i]\d+): 1$/.test(l)).map((l) => l.split(':')[0]).sort();
+    const legal = out.filter((l) => /^([a-i]\d+[a-i]\d+[+a-z]?|[A-Z]@[a-i]\d+): 1$/.test(l)).map((l) => l.split(':')[0]).sort();
     const d = await send('d', (l) => l.startsWith('Chased'));
     const fen = d.find((l) => l.startsWith('Fen: ')).slice(5);
     if (ply % 4 === 0) positions.push([fen, legal.join(' ')]);

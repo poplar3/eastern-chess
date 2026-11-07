@@ -60,7 +60,13 @@ export class Game {
   }
 
   playUci(uci: string): HistoryEntry {
-    const m = this.legalMoves().find((x) => this.variant.moveToUci(x) === uci);
+    const legal = this.legalMoves();
+    let m = legal.find((x) => this.variant.moveToUci(x) === uci);
+    // Обязательное превращение движок может записать и без буквы фигуры (и наоборот): сверяем по полям.
+    if (!m) {
+      const same = legal.filter((x) => this.variant.moveToUci(x).slice(0, 4) === uci.slice(0, 4) && /^[a-z]\d[a-z]\d[a-z]?$/.test(uci));
+      if (same.length === 1) m = same[0];
+    }
     if (!m) throw new Error(`Нелегальный ход ${uci}`);
     return this.play(m);
   }
@@ -111,5 +117,8 @@ export const END_REASON_RU: Record<GameResult['reason'], string> = {
   repetition: 'Повторение позиции: победа по очкам',
   'perpetual-check': 'Вечный шах запрещён',
   'pawn-drop-mate': 'Мат сбросом пешки запрещён',
+  counting: 'Правило счёта: ничья',
+  insufficient: 'Остались одни короли: ничья',
+  'bare-king': 'Оголённый король',
   resign: 'Сдача',
 };

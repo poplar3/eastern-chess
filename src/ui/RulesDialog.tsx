@@ -4,6 +4,7 @@ import { PIECE_VALUES } from '../core/rules';
 import type { Variant } from '../core/types';
 import { Modal } from './Modal';
 import { PIECE_NAMES, PieceIcon, type PieceStyle } from './pieces';
+import { MakrukRules, ShatranjRules } from './RulesChess8';
 import { ShogiRules, XiangqiRules } from './RulesOther';
 
 const PIECE_RULES: { t: PieceType; text: ReactNode }[] = [
@@ -69,7 +70,17 @@ export function RulesDialog({ variant, style, onClose }: { variant?: Variant; st
   const id = variant?.id ?? 'janggi';
   return (
     <Modal title={`Краткие правила: ${variant?.name ?? 'Чанги'}`} onClose={onClose} wide>
-      {id === 'xiangqi' ? <XiangqiRules style={style} /> : id === 'shogi' ? <ShogiRules style={style} /> : <JanggiRules style={style} />}
+      {id === 'xiangqi' ? (
+        <XiangqiRules style={style} />
+      ) : id === 'shogi' ? (
+        <ShogiRules style={style} />
+      ) : id === 'makruk' ? (
+        <MakrukRules style={style} />
+      ) : id === 'shatranj' ? (
+        <ShatranjRules style={style} />
+      ) : (
+        <JanggiRules style={style} />
+      )}
     </Modal>
   );
 }

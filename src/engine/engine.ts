@@ -1,4 +1,4 @@
-// Клиент UCI для Fairy-Stockfish (варианты janggi, xiangqi и shogi).
+// Клиент UCI для Fairy-Stockfish (варианты janggi, xiangqi, shogi, makruk и shatranj).
 import type { GameId } from '../core/types';
 import { createTransport, type EngineTransport } from './transport';
 

@@ -3,7 +3,7 @@ import type { GameId } from './core/types';
 import type { PieceStyle } from './ui/pieces';
 
 export interface GameConfig {
-  /** Игра: Чанги, Сянци или Сёги. */
+  /** Игра: Чанги, Сянци, Сёги, Макрук или Шатрандж. */
   variant: GameId;
   mode: 'human' | 'bot';
   /** За кого играет человек в партии с ботом. */
