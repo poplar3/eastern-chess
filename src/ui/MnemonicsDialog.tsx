@@ -18,18 +18,32 @@ export function MnemonicsDialog({ variant, onClose }: { variant: Variant; onClos
       }
     >
       <p className="mn-intro">{set.intro}</p>
-      <ul className="mn-list">
-        {set.cards.map((m) => (
-          <li key={m.piece + m.glyph} className="mn-card">
-            <PieceIcon piece={m.piece} style="hanja" size={56} game={variant.id} />
-            <div>
-              <div className="mn-name">{m.name}</div>
-              <div className="mn-look">{m.look}</div>
-              <div className="mn-hook">{m.hook}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <table className="mn-table">
+        <thead>
+          <tr>
+            <th>Знак</th>
+            <th>Фигура</th>
+            <th>На что похож</th>
+            <th>Как запомнить</th>
+          </tr>
+        </thead>
+        <tbody>
+          {set.cards.map((m) => (
+            <tr key={m.piece + m.glyph}>
+              <td className="mn-glyph">
+                <PieceIcon piece={m.piece} style="hanja" size={48} game={variant.id} />
+              </td>
+              <td className="mn-name">{m.name}</td>
+              <td className="mn-look" data-label="На что похож">
+                {m.look}
+              </td>
+              <td className="mn-hook" data-label="Как запомнить">
+                {m.hook}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {set.outro && <p className="mn-intro">{set.outro}</p>}
       <p className="muted mn-foot">Эти подсказки всегда можно открыть снова в «Правилах».</p>
     </Modal>

@@ -1144,36 +1144,64 @@ body {
 .mn-intro {
   margin: 0 0 12px;
 }
-.mn-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-  gap: 10px;
+.mn-table {
+  width: 100%;
+  border-collapse: collapse;
 }
-.mn-card {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+.mn-table th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--border);
 }
-.mn-card .piece-icon {
-  flex: none;
+.mn-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.mn-glyph {
+  width: 64px;
+}
+.mn-glyph .piece-icon {
+  display: block;
 }
 .mn-name {
   font-weight: 600;
-  margin-bottom: 2px;
+  width: 22%;
 }
 .mn-look {
   color: var(--muted);
-  font-size: 14px;
 }
-.mn-hook {
-  margin-top: 4px;
+/* На узком экране строка таблицы становится карточкой с подписями. */
+@media (max-width: 600px) {
+  .mn-table thead {
+    display: none;
+  }
+  .mn-table tr {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mn-table td {
+    border: none;
+    padding: 2px 0;
+  }
+  .mn-glyph {
+    grid-row: span 3;
+    width: auto;
+  }
+  .mn-name {
+    width: auto;
+  }
+  .mn-table td[data-label]::before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    color: var(--text);
+  }
 }
 .mn-foot {
   margin: 12px 0 0;
