@@ -28,3 +28,7 @@ src-tauri/target
 src-tauri/gen/schemas
 src-tauri/engine/fairy-stockfish*
 src-tauri/engine/COPYING.txt
+
+# Нейросети движка (scripts/fetch-engine.mjs)
+src-tauri/engine/nnue
+.nnue-cache

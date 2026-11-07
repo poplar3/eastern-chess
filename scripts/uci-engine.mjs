@@ -1,8 +1,11 @@
 // Простая обёртка над Fairy-Stockfish по UCI для скриптов (генерация задач, проверка уроков).
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
+import { evalFileFor } from './nnue-nets.mjs';
 
 export const ENGINE = process.env.FAIRY_STOCKFISH ?? new URL('../src-tauri/engine/fairy-stockfish', import.meta.url).pathname;
+/** Сети всех игр, если они лежат рядом с движком (src-tauri/engine/nnue). */
+export const EVAL_FILE = evalFileFor(ENGINE);
 
 export class Engine {
   constructor() {
@@ -28,6 +31,7 @@ export class Engine {
   async init(variant = process.env.VARIANT ?? 'janggi') {
     this.send('uci');
     await this.wait((l) => l === 'uciok');
+    if (EVAL_FILE) this.send(`setoption name EvalFile value ${EVAL_FILE}`);
     this.send(`setoption name UCI_Variant value ${variant}`);
     this.send('setoption name Threads value 1');
     this.send('setoption name Hash value 64');

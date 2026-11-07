@@ -47,8 +47,10 @@ android {
     }
     // Движок Fairy-Stockfish лежит в jniLibs как libfairystockfish.so: Android распаковывает такие
     // файлы при установке в папку, откуда их можно запускать как программу.
+    // Там же лежат нейросети других игр (libnnue_<сеть>.so): это не программы, их не надо «обрезать».
     packaging {
         jniLibs.useLegacyPackaging = true
+        jniLibs.keepDebugSymbols.add("**/libnnue_*.so")
     }
     buildTypes {
         getByName("debug") {
