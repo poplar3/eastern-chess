@@ -15,6 +15,7 @@ import { NewGameDialog } from './ui/NewGameDialog';
 import { PuzzlesView } from './ui/PuzzlesView';
 import { TrainingView } from './ui/TrainingView';
 import { StatsView } from './ui/StatsView';
+import { HistoryView } from './ui/HistoryView';
 import { newRecordId, patchRecord, putRecord, type GameRecord } from './history/store';
 import { ReviewPanel } from './ui/ReviewPanel';
 import { RulesDialog } from './ui/RulesDialog';
@@ -61,9 +62,9 @@ export default function App() {
   const [showMnemonics, setShowMnemonics] = useState(
     () => !DEV_FEN && config.pieceStyle === 'hanja' && !mnemonicsSeen(config.variant),
   );
-  const [view, setView] = useState<'game' | 'puzzles' | 'training' | 'stats'>(() => {
+  const [view, setView] = useState<'game' | 'puzzles' | 'training' | 'stats' | 'history'>(() => {
     const v = DEV_PARAMS?.get('view');
-    return v === 'puzzles' || v === 'training' || v === 'stats' ? v : 'game';
+    return v === 'puzzles' || v === 'training' || v === 'stats' || v === 'history' ? v : 'game';
   });
   const [resultClosed, setResultClosed] = useState(false);
 
@@ -541,6 +542,9 @@ export default function App() {
           <button className={`btn${view === 'stats' ? ' active' : ''}`} onClick={() => setView('stats')}>
             Статистика
           </button>
+          <button className={`btn${view === 'history' ? ' active' : ''}`} onClick={() => setView('history')}>
+            История
+          </button>
         </nav>
       </header>
 
@@ -573,6 +577,7 @@ export default function App() {
       )}
       {view === 'training' && lessonsFor(shownVariant.id).length > 0 && <TrainingView key={shownVariant.id} variant={shownVariant} style={config.pieceStyle} />}
       {view === 'stats' && <StatsView variant={shownVariant} onOpen={openRecord} />}
+      {view === 'history' && <HistoryView key={shownVariant.id} variant={shownVariant} onChoose={chooseGame} />}
       {view === 'game' && (
       <main className="layout">
         <div className="board-area">
