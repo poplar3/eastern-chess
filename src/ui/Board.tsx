@@ -193,6 +193,13 @@ export function Board({
         <>
           <rect x={0} y={0} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
           <rect x={0} y={H - HAND_H + 6} width={W} height={HAND_H - 6} rx={10} className="hand-tray" />
+          {(['w', 'b'] as const)
+            .filter((c) => !handOrder.some((t) => (hands?.[c][t] ?? 0) > 0))
+            .map((c) => (
+              <text key={c} x={W / 2} y={c === bottom ? H - HAND_H / 2 + 3 : HAND_H / 2 - 3} className="hand-empty" fontSize={Math.round(W / 34)} textAnchor="middle" dominantBaseline="central">
+                Рука {variant.sidesGen[c]} пуста
+              </text>
+            ))}
         </>
       )}
       <rect x={0} y={handH} width={W} height={BH} rx={10} fill="url(#wood)" />

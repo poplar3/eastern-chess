@@ -1,21 +1,32 @@
 /* Ночной режим: включается атрибутом <html data-theme="dark"> (см. applyTheme в settings.ts).
    Деревянная доска и фигуры остаются прежними, тёмными становятся фон, панели, кнопки и подсказки. */
 :root[data-theme='dark'] {
-  --bg: #17130f;
-  --panel: #221c16;
-  --border: #3b3127;
-  --text: #ece3d4;
-  --muted: #a89a86;
-  --accent: #5b93ec;
+  --bg: #13110f;
+  --panel: #1b1815;
+  --btn: #221e1a;
+  --btn-hover: #2a2520;
+  --sel: #2a251f;
+  --border: #36302a;
+  --border-strong: #574c40;
+  --rule: #2b2621;
+  --text: #ebe3d5;
+  --muted: #9e917f;
+  --ink: #e8dcc4;
+  --ink-hover: #f4ead6;
+  --on-ink: #1a1510;
+  --seal: #b8473a;
+  --accent: #82a7dc;
   --cho: #4fbf8f;
   --han: #ef6b6f;
-  --danger: #ef6b6f;
+  --danger: #ef7b74;
   --cho-soft: rgba(79, 191, 143, 0.4);
   --han-soft: rgba(239, 107, 111, 0.25);
-  --card: #2a231c;
-  --card-hover: #332a21;
-  --soft-blue: #1f2c44;
-  --soft-blue-border: #36507e;
+  --card: #221e1a;
+  --card-hover: #2a2520;
+  --soft-blue: #1e2836;
+  --soft-blue-border: #3a5276;
+  --tray: rgba(232, 200, 140, 0.06);
+  --tray-line: rgba(232, 200, 140, 0.16);
   color-scheme: dark;
 }
 :root[data-theme='dark'] .app[data-game='xiangqi'],
@@ -25,6 +36,9 @@
   --cho-soft: rgba(240, 113, 106, 0.35);
   --han-soft: rgba(216, 207, 194, 0.2);
 }
+:root[data-theme='dark'] .app[data-game='makruk'],
+:root[data-theme='dark'] .app[data-game='cambodian'],
+:root[data-theme='dark'] .app[data-game='sittuyin'],
 :root[data-theme='dark'] .app[data-game='shatranj'] {
   --cho: #d6ad72;
   --han: #d8cfc2;
@@ -36,74 +50,28 @@
   --han: #d6a25e;
 }
 
-:root[data-theme='dark'] .topbar {
-  background: #0f0c09;
-  border-bottom: 1px solid #2c241c;
-}
 :root[data-theme='dark'] .board {
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55)) brightness(0.92);
 }
 
 /* Кнопки, поля, карточки */
-:root[data-theme='dark'] .btn,
-:root[data-theme='dark'] .segmented button,
-:root[data-theme='dark'] .setup-option,
 :root[data-theme='dark'] .field select,
 :root[data-theme='dark'] .review-start select,
 :root[data-theme='dark'] .puzzle-filters select,
-:root[data-theme='dark'] .dot-btn,
 :root[data-theme='dark'] select,
 :root[data-theme='dark'] input {
   background: var(--card);
   color: var(--text);
   border-color: var(--border);
 }
-:root[data-theme='dark'] .btn:hover:not(:disabled),
 :root[data-theme='dark'] .diagram-link {
   background: var(--card-hover);
   border-color: #5a4a39;
 }
-:root[data-theme='dark'] .btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-:root[data-theme='dark'] .btn.primary:hover:not(:disabled) {
-  background: #4a80d8;
-}
-:root[data-theme='dark'] .btn.active,
-:root[data-theme='dark'] .segmented button.active,
-:root[data-theme='dark'] .setup-option.active,
-:root[data-theme='dark'] .moves .move.active {
-  background: var(--soft-blue);
-  border-color: var(--soft-blue-border);
-  color: var(--text);
-}
 :root[data-theme='dark'] .btn.danger {
   color: var(--danger);
 }
-:root[data-theme='dark'] .topbar .btn,
-:root[data-theme='dark'] .game-switch button {
-  background: transparent;
-  color: #f0e4cc;
-  border-color: #4a3b2b;
-}
-:root[data-theme='dark'] .topbar .btn:hover:not(:disabled),
-:root[data-theme='dark'] .game-switch button:hover {
-  background: #2a2119;
-}
-:root[data-theme='dark'] .topbar .btn.active {
-  background: #3a2c1e;
-  border-color: #9a7a4c;
-}
-:root[data-theme='dark'] .game-switch button.active {
-  background: #e9dcc2;
-  color: #2b2118;
-  border-color: #e9dcc2;
-}
-
 /* Мягкие фоны строк и плашек */
-:root[data-theme='dark'] .score-row.to-move,
 :root[data-theme='dark'] .last-move,
 :root[data-theme='dark'] .review-move,
 :root[data-theme='dark'] .stat-tile,
@@ -123,10 +91,7 @@
 :root[data-theme='dark'] .eval-bar.empty .eval-han {
   background: #2e261f;
 }
-:root[data-theme='dark'] .view-banner {
-  background: var(--soft-blue);
-  border-color: var(--soft-blue-border);
-}
+
 :root[data-theme='dark'] .alert.bikjang {
   background: #3a2a14;
   border-color: #8a5a20;
@@ -136,10 +101,7 @@
   background: #3d1d1d;
   border-color: #8a3a3a;
 }
-:root[data-theme='dark'] .alert.game-over {
-  background: var(--soft-blue);
-  border-color: var(--accent);
-}
+
 :root[data-theme='dark'] .puzzle-card.solved,
 :root[data-theme='dark'] .dot-btn.done,
 :root[data-theme='dark'] .btn.choice.right {
@@ -160,10 +122,7 @@
 :root[data-theme='dark'] .modal {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
-:root[data-theme='dark'] .lore-mark {
-  background: #e9dcc2;
-  color: #2b2118;
-}
+
 
 .theme-toggle {
   min-width: 40px;
@@ -171,20 +130,6 @@
   line-height: 1;
 }
 
-/* Необычные вариации */
-:root[data-theme='dark'] .game-switch select.game-extra {
-  color: #f0e4cc;
-  border-color: #4a3b2b;
-}
-:root[data-theme='dark'] .game-switch select.game-extra.active {
-  background: #e9dcc2;
-  color: #2b2118;
-  border-color: #e9dcc2;
-}
-:root[data-theme='dark'] .game-switch select.game-extra option {
-  background: var(--panel);
-  color: var(--text);
-}
 :root[data-theme='dark'] .setup-note {
   background: var(--soft-blue);
   border-color: var(--soft-blue-border);
