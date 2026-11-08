@@ -90,11 +90,11 @@ const MATE_BY_PIECE: Record<GameId, Record<string, ConceptId>> = {
   xiangqi: { R: 'mate-chariot', C: 'mate-cannon', N: 'mate-horse', P: 'mate-soldier' },
   makruk: { R: 'mate-rook', N: 'mate-knight', S: 'mate-khon', M: 'mate-met', P: 'mate-pawn' },
   shatranj: { R: 'mate-rook', N: 'mate-knight', B: 'mate-alfil', Q: 'mate-met', P: 'mate-pawn' },
-  cambodian: {},
-  sittuyin: {},
-  minishogi: {},
-  kyotoshogi: {},
-  manchu: {},
+  cambodian: { R: 'mate-rook', N: 'mate-knight', S: 'mate-khon', M: 'mate-met', P: 'mate-pawn' },
+  sittuyin: { R: 'mate-rook', N: 'mate-knight', S: 'mate-khon', F: 'mate-met', P: 'mate-pawn' },
+  minishogi: { R: 'mate-rook', '+R': 'mate-rook', B: 'mate-bishop', '+B': 'mate-bishop', G: 'mate-gold', '+P': 'mate-gold', '+S': 'mate-gold', S: 'mate-silver', P: 'mate-pawn' },
+  kyotoshogi: { '+P': 'mate-rook', '+S': 'mate-bishop', '+N': 'mate-gold', '+L': 'mate-gold', S: 'mate-silver', N: 'mate-knight', L: 'mate-lance', P: 'mate-pawn' },
+  manchu: { M: 'mate-banner', R: 'mate-chariot', C: 'mate-cannon', N: 'mate-horse', P: 'mate-soldier' },
   shogi: {
     R: 'mate-rook', '+R': 'mate-rook', B: 'mate-bishop', '+B': 'mate-bishop',
     G: 'mate-gold', '+P': 'mate-gold', '+L': 'mate-gold', '+N': 'mate-gold', '+S': 'mate-gold',
@@ -179,7 +179,7 @@ export function annotate(d: PuzzleData, variant: Variant = JANGGI): Puzzle {
   const last = mine[mine.length - 1];
   const concepts: ConceptId[] = [];
   const add = (c: ConceptId) => !concepts.includes(c) && concepts.push(c);
-  const big = v.id === 'xiangqi' ? 2 : v.id === 'makruk' || v.id === 'shatranj' ? 2.5 : 3;
+  const big = v.family === 'xiangqi' ? 2 : v.family === 'chess8' ? 2.5 : 3;
   let screen = false;
   if (d.checksOnly) add('check-chain');
 
@@ -204,7 +204,7 @@ export function annotate(d: PuzzleData, variant: Variant = JANGGI): Puzzle {
     }
     if (last.move.from < 0) add('drop');
     if (palaceDiagonal(v, last)) add('palace-diagonal');
-    if (v.id === 'xiangqi' && flyingGeneralHelps(v, board, opp)) add('flying-general');
+    if (v.family === 'xiangqi' && flyingGeneralHelps(v, board, opp)) add('flying-general');
     if (checkers.length >= 2) add('double-check');
     else if (checkers.length === 1 && checkers[0] !== last.move.to) {
       // Фигура, вставшая между пушкой и генералом, — это экран, а не вскрытый шах.
@@ -224,7 +224,8 @@ export function annotate(d: PuzzleData, variant: Variant = JANGGI): Puzzle {
     if (palaceDiagonal(v, first)) add('palace-diagonal');
     if (first.move.from < 0) add('drop');
   }
-  if ((v.id === 'shogi' || v.board === 'cells') && mine.some((h) => h.move.promo)) add('promotion');
+  // В киото-сёги фигура переворачивается каждым ходом — это не приём.
+  if (v.id !== 'kyotoshogi' && (v.family === 'shogi' || v.board === 'cells') && mine.some((h) => h.move.promo)) add('promotion');
   if (sacrificed) add('sacrifice');
   if (quiet && (d.goal === 'mate' || !concepts.includes('fork'))) add('quiet-move');
   if (d.goal === 'material' && !concepts.length) add('material-gain');
@@ -237,7 +238,7 @@ export function annotate(d: PuzzleData, variant: Variant = JANGGI): Puzzle {
   if (sacrificed) lvl++;
   if (concepts.includes('double-check') || concepts.includes('discovered')) lvl = Math.max(lvl, 2);
   // В цумэ-сёги каждый ход — шах, поэтому короткие задачи проще, чем мат того же числа ходов в других играх.
-  if (v.id === 'shogi' && d.checksOnly && d.goal === 'mate') lvl = Math.max(1, Math.ceil((d.mateIn ?? 1) * 0.75) + (sacrificed ? 1 : 0));
+  if (v.family === 'shogi' && d.checksOnly && d.goal === 'mate') lvl = Math.max(1, Math.ceil((d.mateIn ?? 1) * 0.75) + (sacrificed ? 1 : 0));
   const levels = levelsFor(v.id);
   const level = levels[Math.min(levels.length, Math.max(1, lvl)) - 1];
 
@@ -248,7 +249,7 @@ export function annotate(d: PuzzleData, variant: Variant = JANGGI): Puzzle {
   const description = d.checksOnly
     ? v.id === 'janggi'
       ? `Ход ${side}. Задача бакбо: поставьте мат в ${moves}, объявляя шах каждым ходом.`
-      : v.id === 'shogi'
+      : v.family === 'shogi'
         ? `Ход ${side}. Цумэ: поставьте мат в ${moves}, объявляя шах каждым ходом.`
         : `Ход ${side}. Поставьте мат в ${moves}, объявляя шах каждым ходом.`
     : d.goal === 'mate'

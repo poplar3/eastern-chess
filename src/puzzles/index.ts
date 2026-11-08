@@ -1,9 +1,14 @@
 import bakbo from './bakbo.json';
+import cambodian from './cambodian.json';
 import classic from './classic.json';
+import kyotoshogi from './kyotoshogi.json';
+import manchu from './manchu.json';
+import minishogi from './minishogi.json';
 import own from './own.json';
 import makruk from './makruk.json';
 import shatranj from './shatranj.json';
 import shogi from './shogi.json';
+import sittuyin from './sittuyin.json';
 import xiangqi from './xiangqi.json';
 import type { GameId } from '../core/types';
 import { getVariant } from '../core/variants';
@@ -40,7 +45,7 @@ export function allPuzzles(game: GameId = 'janggi'): Puzzle[] {
   if (hit) return hit;
   if (game !== 'janggi') {
     const v = getVariant(game);
-    const raw = ((({ xiangqi, shogi, makruk, shatranj }) as Partial<Record<GameId, unknown[]>>)[game] ?? []) as (PuzzleData & { origin: string })[];
+    const raw = ((({ xiangqi, shogi, makruk, shatranj, cambodian, sittuyin, minishogi, kyotoshogi, manchu }) as Partial<Record<GameId, unknown[]>>)[game] ?? []) as (PuzzleData & { origin: string })[];
     return (cache[game] = sortPuzzles(raw.map(({ origin, ...d }) => annotate({ ...d, source: OTHER_SOURCE[origin] ?? OWN_SOURCE.game }, v))));
   }
   const data = [...own, ...bakbo, ...classic] as (PuzzleData & { origin: keyof typeof OWN_SOURCE | 'classic' })[];
