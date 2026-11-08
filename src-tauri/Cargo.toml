@@ -1,6 +1,6 @@
 [package]
 name = "eastern-chess"
-version = "0.5.0"
+version = "0.6.0"
 description = "Восточные шахматы: чанги, сянци, сёги"
 authors = ["poplar3"]
 license = "GPL-3.0"
