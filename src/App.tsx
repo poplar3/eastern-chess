@@ -5,11 +5,12 @@ import { endReasonText, Game } from './core/game';
 import { setupName, startFenWithSetups, type Setup } from './core/rules';
 import { autoSetupMove, inSetup } from './core/sittuyin';
 import { isPass, opposite, type Color, type GameId, type Move } from './core/types';
-import { EXTRA_GAME_IDS, getVariant, MAIN_GAME_IDS, VARIANTS } from './core/variants';
+import { getVariant, VARIANTS } from './core/variants';
 import { analysisThreads, BOT_LEVELS, formatScore, getEngine, type PvInfo } from './engine/engine';
 import { applyTheme, effectiveTheme, loadConfig, loadPrefs, saveConfig, savePrefs, type GameConfig, type Theme } from './settings';
 import { AiPanel, ARROW_COLORS, REPLY_COLOR, type EngineStatus, type ShownLines } from './ui/AiPanel';
 import { Board, type Arrow } from './ui/Board';
+import { GamePicker } from './ui/GamePicker';
 import { Modal } from './ui/Modal';
 import { MoveList } from './ui/MoveList';
 import { NewGameDialog } from './ui/NewGameDialog';
@@ -44,6 +45,15 @@ const DEV_FEN = DEV_PARAMS?.get('fen') ?? null;
 /** ?bot=b — в позиции из ?fen= за Хана играет компьютер. */
 const DEV_BOT = DEV_PARAMS?.get('bot') as 'w' | 'b' | null;
 
+type View = 'game' | 'puzzles' | 'training' | 'stats' | 'history';
+const SECTIONS: [View, string][] = [
+  ['game', 'Партия'],
+  ['puzzles', 'Задачи'],
+  ['training', 'Обучение'],
+  ['history', 'История'],
+  ['stats', 'Статистика'],
+];
+
 export default function App() {
   const [config, setConfig] = useState<GameConfig>(() => (DEV_FEN ? { ...loadConfig(), mode: DEV_BOT ? 'bot' : 'human', humanColor: DEV_BOT === 'w' ? 'b' : 'w' } : loadConfig()));
   const [prefs, setPrefs] = useState(loadPrefs);
@@ -64,7 +74,7 @@ export default function App() {
   const [showMnemonics, setShowMnemonics] = useState(
     () => !DEV_FEN && config.pieceStyle === 'hanja' && !mnemonicsSeen(config.variant),
   );
-  const [view, setView] = useState<'game' | 'puzzles' | 'training' | 'stats' | 'history'>(() => {
+  const [view, setView] = useState<View>(() => {
     const v = DEV_PARAMS?.get('view');
     return v === 'puzzles' || v === 'training' || v === 'stats' || v === 'history' ? v : 'game';
   });
@@ -422,6 +432,8 @@ export default function App() {
     return true;
   };
 
+  const openNewGame = () => setShowNewGame(true);
+
   const closeMnemonics = () => {
     markMnemonicsSeen(shownVariant.id);
     setShowMnemonics(false);
@@ -534,7 +546,7 @@ export default function App() {
     if (view === 'game') {
       if (id === variant.id) return;
       setDialogVariant(id);
-      setShowNewGame(true);
+      openNewGame();
     } else {
       setConfig({ ...config, variant: id });
       // Настройки партии из журнала не должны попасть в сохранённые настройки новой партии.
@@ -545,65 +557,33 @@ export default function App() {
   return (
     <div className="app" data-game={shownVariant.id}>
       <header className="topbar">
-        <div className="brand">
-          <span className={`brand-mark brand-${shownVariant.id}`}>{shownVariant.mark}</span> {shownVariant.name}{' '}
-          <span className="muted">{shownVariant.subtitle}</span>
-        </div>
-        <div className="game-switch segmented" role="tablist" aria-label="Игра">
-          {MAIN_GAME_IDS.map((id) => (
-            <button key={id} role="tab" aria-selected={shownVariant.id === id} className={shownVariant.id === id ? 'active' : ''} onClick={() => chooseGame(id)}>
-              {VARIANTS[id].name}
+        <GamePicker current={shownVariant} onChoose={chooseGame} />
+        <nav className="sections" aria-label="Разделы">
+          {SECTIONS.map(([id, label]) => (
+            <button key={id} className={`tab${view === id ? ' on' : ''}`} aria-current={view === id ? 'page' : undefined} onClick={() => setView(id)}>
+              {label}
             </button>
           ))}
-          <select
-            className={`game-extra${shownVariant.group === 'extra' ? ' active' : ''}`}
-            aria-label="Необычные вариации"
-            value={shownVariant.group === 'extra' ? shownVariant.id : ''}
-            onChange={(e) => e.target.value && chooseGame(e.target.value as GameId)}
-          >
-            <option value="" disabled>
-              Ещё игры…
-            </option>
-            {EXTRA_GAME_IDS.map((id) => (
-              <option key={id} value={id}>
-                {VARIANTS[id].name} — {VARIANTS[id].subtitle}
-              </option>
-            ))}
-          </select>
-        </div>
-        <nav>
-          <button className="btn" onClick={() => setShowNewGame(true)}>
-            Новая партия
-          </button>
-          {view !== 'game' && (
-            <button className="btn" onClick={() => setView('game')}>
-              К партии
-            </button>
-          )}
-          <button className="btn" onClick={() => setShowRules(true)}>
-            Правила
-          </button>
-          <button className={`btn${view === 'puzzles' ? ' active' : ''}`} onClick={() => setView('puzzles')}>
-            Задачи
-          </button>
-          <button className={`btn${view === 'training' ? ' active' : ''}`} onClick={() => setView('training')}>
-            Обучение
-          </button>
-          <button className={`btn${view === 'stats' ? ' active' : ''}`} onClick={() => setView('stats')}>
-            Статистика
-          </button>
-          <button className={`btn${view === 'history' ? ' active' : ''}`} onClick={() => setView('history')}>
-            История
+        </nav>
+        <div className="topbar-actions">
+          <button className="btn ghost rules-btn" onClick={() => setShowRules(true)} title={`Правила: ${shownVariant.name}`}>
+            <span className="rules-text">Правила</span>
+            <span className="rules-icon" aria-hidden="true">
+              ?
+            </span>
           </button>
           <button
-            className="btn theme-toggle"
+            className="btn ghost theme-toggle"
             onClick={cycleTheme}
             title={`Тема: ${THEME_LABEL[prefs.theme]}. Нажмите, чтобы сменить`}
             aria-label={`Тема: ${THEME_LABEL[prefs.theme]}`}
           >
             {prefs.theme === 'system' ? '◐' : effectiveTheme(prefs.theme) === 'dark' ? '☾' : '☀'}
           </button>
-        </nav>
+          <button className="btn primary new-game-btn" onClick={openNewGame}>
+            Новая партия
+          </button>
+        </div>
       </header>
 
       {(view === 'puzzles' || view === 'training') && (view === 'puzzles' ? allPuzzles(shownVariant.id) : lessonsFor(shownVariant.id)).length === 0 && (
@@ -618,7 +598,7 @@ export default function App() {
               <button className="btn" onClick={() => setShowRules(true)}>
                 Правила
               </button>
-              <button className="btn primary" onClick={() => setShowNewGame(true)}>
+              <button className="btn primary" onClick={openNewGame}>
                 Новая партия
               </button>
             </div>
@@ -701,8 +681,8 @@ export default function App() {
             <button className="btn" onClick={undo} disabled={n === 0}>
               Отменить ход
             </button>
-            <button className="btn" onClick={() => setFlipped((f) => !f)}>
-              Перевернуть доску
+            <button className="btn" onClick={() => setFlipped((f) => !f)} title="Перевернуть доску">
+              Перевернуть
             </button>
             <button className="btn danger" onClick={resign} disabled={!!result}>
               Сдаться
@@ -783,7 +763,8 @@ export default function App() {
         />
       )}
       {showMnemonics && !showNewGame && MNEMONICS[shownVariant.id] && <MnemonicsDialog variant={shownVariant} onClose={closeMnemonics} />}
-      {result && !resultClosed && view === 'game' && (
+      {/* Пока открыт диалог новой партии, окно итогов не показываем: раньше оно оставалось поверх диалога и кнопка «Новая партия» как будто не работала. */}
+      {result && !resultClosed && !showNewGame && view === 'game' && (
         <Modal
           title="Партия окончена"
           onClose={() => setResultClosed(true)}
@@ -795,7 +776,7 @@ export default function App() {
               <button className="btn" onClick={openReview} disabled={engineStatus.state !== 'ready'}>
                 Разбор партии
               </button>
-              <button className="btn primary" onClick={() => setShowNewGame(true)}>
+              <button className="btn primary" onClick={openNewGame}>
                 Новая партия
               </button>
             </>

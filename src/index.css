@@ -18,15 +18,29 @@
 }
 
 :root {
-  --bg: #f4efe6;
-  --panel: #fffdf8;
-  --border: #e2d7c3;
-  --text: #2b2118;
-  --muted: #7c6f60;
-  --accent: #2f6fd6;
+  /* Бумага и тушь: тёплый фон, тонкие линии, тёмные чернила для главных действий. */
+  --bg: #efe8dc;
+  --panel: #f9f5ee;
+  --btn: #fffcf6;
+  --btn-hover: #f3ecdf;
+  --sel: #ece4d5;
+  --border: #d8cbb5;
+  --border-strong: #b5a487;
+  --rule: #e6dccb;
+  --text: #241b13;
+  --muted: #76695a;
+  --ink: #2a2018;
+  --ink-hover: #45372a;
+  --on-ink: #f8f1e4;
+  --seal: #a8382b;
+  --accent: #335f91;
   --cho: #17694a;
   --han: #b3242a;
-  --danger: #b3242a;
+  --danger: #a8332b;
+  --r: 5px;
+  --tray: rgba(176, 132, 66, 0.13);
+  --tray-line: rgba(120, 82, 36, 0.22);
+  --serif: 'Palatino Linotype', 'Book Antiqua', Palatino, 'Iowan Old Style', Georgia, 'Noto Serif', serif;
   font-family: 'Segoe UI', system-ui, 'Malgun Gothic', 'Noto Sans KR', sans-serif;
   color: var(--text);
   background: var(--bg);
