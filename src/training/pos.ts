@@ -34,16 +34,13 @@ export function shogiPos(turn: Color, pieces: Record<string, string>, hand = '')
   return `${rows.join('/')}[${hand}] ${turn} - - 0 1`;
 }
 
-/**
- * FEN доски 8×8 (Макрук, Шатрандж) по расстановке, белые внизу:
- * `pos8('w', { d1: 'K', e8: 'k', a1: 'R' })`.
- */
-export function pos8(turn: Color, pieces: Record<string, string>): string {
-  const rows: string[] = [];
-  for (let r = 8; r >= 1; r--) {
+/** Ряды FEN по расстановке: первая горизонталь внизу, вертикали — буквами с a. */
+function rows(files: number, ranks: number, pieces: Record<string, string>): string {
+  const out: string[] = [];
+  for (let r = ranks; r >= 1; r--) {
     let row = '';
     let empty = 0;
-    for (const f of 'abcdefgh') {
+    for (const f of 'abcdefghi'.slice(0, files)) {
       const p = pieces[`${f}${r}`];
       if (!p) empty++;
       else {
@@ -53,7 +50,25 @@ export function pos8(turn: Color, pieces: Record<string, string>): string {
       }
     }
     if (empty) row += empty;
-    rows.push(row);
+    out.push(row);
   }
-  return `${rows.join('/')} ${turn} - - 0 1`;
+  return out.join('/');
+}
+
+/**
+ * FEN доски 8×8 (Макрук, Шатрандж, Ок, Ситтуйин) по расстановке, белые внизу:
+ * `pos8('w', { d1: 'K', e8: 'k', a1: 'R' })`.
+ * gates — права на особый первый ход в оке («DEde»), hand — фигуры в руке в ситтуйине.
+ */
+export function pos8(turn: Color, pieces: Record<string, string>, opts: { gates?: string; hand?: string } = {}): string {
+  const hand = opts.hand !== undefined ? `[${opts.hand}]` : '';
+  return `${rows(8, 8, pieces)}${hand} ${turn} ${opts.gates || '-'} - 0 1`;
+}
+
+/**
+ * FEN доски 5×5 (мини-сёги, киото-сёги) по расстановке в записи движка (a1–e5, сэнтэ внизу):
+ * `pos5('w', { c1: 'K', c5: 'k' }, 'G')` — в руке у сэнтэ золото.
+ */
+export function pos5(turn: Color, pieces: Record<string, string>, hand = ''): string {
+  return `${rows(5, 5, pieces)}[${hand}] ${turn} 0 1`;
 }

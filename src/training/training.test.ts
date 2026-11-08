@@ -25,7 +25,7 @@ function satisfies(t: FindTask, g: Game, m: Move) {
   return (t.moves ?? []).includes(g.variant.moveToUci(m));
 }
 
-// У макрука и шатранджа курса пока нет.
+// Курс есть у каждой игры; проверяются все.
 for (const id of GAME_IDS.filter((g) => lessonsFor(g).length > 0)) {
   const v = getVariant(id);
   const lessons = lessonsFor(id);

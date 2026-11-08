@@ -1,9 +1,14 @@
 import type { GameId } from '../core/types';
 import { allPuzzles } from '../puzzles';
 import { LESSONS } from './lessons';
+import { CAMBODIAN_LESSONS } from './lessonsCambodian';
+import { KYOTOSHOGI_LESSONS } from './lessonsKyotoshogi';
 import { MAKRUK_LESSONS } from './lessonsMakruk';
+import { MANCHU_LESSONS } from './lessonsManchu';
+import { MINISHOGI_LESSONS } from './lessonsMinishogi';
 import { SHATRANJ_LESSONS } from './lessonsShatranj';
 import { SHOGI_LESSONS } from './lessonsShogi';
+import { SITTUYIN_LESSONS } from './lessonsSittuyin';
 import { XIANGQI_LESSONS } from './lessonsXiangqi';
 import type { ConcreteTask, Lesson } from './types';
 
@@ -13,10 +18,19 @@ export { XIANGQI_LESSONS } from './lessonsXiangqi';
 
 /** Курс обучения для игры. */
 export function lessonsFor(game: GameId): Lesson[] {
-  if (game === 'makruk') return MAKRUK_LESSONS;
-  if (game === 'shatranj') return SHATRANJ_LESSONS;
-  if (game !== 'janggi' && game !== 'xiangqi' && game !== 'shogi') return [];
-  return game === 'xiangqi' ? XIANGQI_LESSONS : game === 'shogi' ? SHOGI_LESSONS : LESSONS;
+  const byGame: Record<GameId, Lesson[]> = {
+    janggi: LESSONS,
+    xiangqi: XIANGQI_LESSONS,
+    shogi: SHOGI_LESSONS,
+    makruk: MAKRUK_LESSONS,
+    shatranj: SHATRANJ_LESSONS,
+    cambodian: CAMBODIAN_LESSONS,
+    sittuyin: SITTUYIN_LESSONS,
+    minishogi: MINISHOGI_LESSONS,
+    kyotoshogi: KYOTOSHOGI_LESSONS,
+    manchu: MANCHU_LESSONS,
+  };
+  return byGame[game] ?? [];
 }
 export type { ConcreteTask, Diagram, Lesson, TheoryBlock } from './types';
 
